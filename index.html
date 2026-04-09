@@ -347,6 +347,39 @@
     transition: border-color 0.2s;
     position: relative;
   }
+  /* ── Month Total Card ── */
+  .month-total-card {
+    background: linear-gradient(135deg, rgba(139,127,212,0.2), rgba(74,143,196,0.15));
+    border: 1.5px solid var(--border-gold-bright);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .month-total-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  }
+  
+  .month-total-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  
+  .month-total-amount {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 28px;
+    color: var(--purple-light);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
   .record-item:hover { border-color: rgba(196,160,100,0.6); }
 
   .record-type-icon {
@@ -567,9 +600,10 @@
 
   <!-- Nav Tabs -->
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('record', this)">✦ 記帳</button>
-    <button class="nav-tab" onclick="switchTab('monthly', this)">◈ 月度分析</button>
-    <button class="nav-tab" onclick="switchTab('yearly', this)">◇ 年度總覽</button>
+    <button class="nav-tab active" onclick="switchTab('record', this)">🐱 記帳</button>
+    <button class="nav-tab" onclick="switchTab('monthly', this)">🐱 月度分析</button>
+    <button class="nav-tab" onclick="switchTab('yearly', this)">🐱 年度總覽</button>
+    <button class="nav-tab" onclick="switchTab('accessory', this)">🐱 周邊手帳</button>
   </div>
 
   <!-- ═══ TAB: RECORD ═══ -->
@@ -596,10 +630,11 @@
       <div class="form-group" style="margin-bottom:14px">
         <div class="form-label">消費類型</div>
         <div class="type-selector" id="typeSelector">
-          <button class="type-btn" data-type="recharge" onclick="selectType('recharge')">💎 儲值</button>
+          <button class="type-btn" data-type="recharge" onclick="selectType('recharge')">💳 儲值</button>
           <button class="type-btn" data-type="weekly" onclick="selectType('weekly')">📅 週卡</button>
           <button class="type-btn" data-type="pact" onclick="selectType('pact')">💌 密約</button>
           <button class="type-btn" data-type="package" onclick="selectType('package')">🎁 禮包</button>
+          <button class="type-btn" data-type="accessory" onclick="selectType('accessory')">🛍️ 周邊</button>
           <button class="type-btn" data-type="other" onclick="selectType('other')">✨ 其他</button>
         </div>
       </div>
@@ -608,7 +643,7 @@
       <div id="extra-recharge" class="hidden" style="margin-bottom:14px">
         <div class="form-group">
           <div class="form-label">購買點數 / 備註</div>
-          <input type="text" id="f-recharge-note" placeholder="例如：購買 6480 皇冠幣">
+          <input type="text" id="f-recharge-note" placeholder="例如：500點">
         </div>
       </div>
 
@@ -637,6 +672,24 @@
         </div>
       </div>
 
+      <!-- Accessory extra -->
+      <div id="extra-accessory" class="hidden" style="margin-bottom:14px">
+        
+        <div class="form-group">
+          <div class="form-label" style="font-weight: 600; color: var(--gold-light);">商品名稱 <span style="color:var(--danger)">*</span></div>
+          <input type="text" id="f-accessory-product" placeholder="例如：黎深抱枕、周邊盲盒">
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">官方授權</div>
+          <label class="check-item">
+            <input type="checkbox" id="f-accessory-official">
+            <div class="check-box"></div>
+            <span class="check-label">官方谷/授權販售</span>
+          </label>
+        </div>
+
+      </div>
       <!-- Other extra -->
       <div id="extra-other" class="hidden" style="margin-bottom:14px">
         <div class="form-group">
@@ -687,6 +740,34 @@
   </div>
 
 </div>
+<!-- ═══ TAB: ACCESSORY ═══ -->
+  <div id="tab-accessory" class="hidden analysis-wrap">
+    
+    <!-- 月份切換 -->
+    <div style="display: flex; gap: 12px; margin-bottom: 20px; justify-content: center;">
+      <button class="btn-ghost" onclick="switchAccessoryView('month')" id="btn-accessory-month">當月</button>
+      <button class="btn-ghost" onclick="switchAccessoryView('all')" id="btn-accessory-all">全部</button>
+    </div>
+
+    <!-- 出貨前通知區域 -->
+    <div id="accessoryNotifications" style="margin-bottom: 20px;"></div>
+
+    <!-- 當月紀錄 -->
+    <div id="accessory-month-view">
+      <div class="chart-title">當月周邊紀錄</div>
+      <div id="accessoryMonthList"></div>
+    </div>
+
+    <!-- 全部紀錄 -->
+    <div id="accessory-all-view" class="hidden">
+      <div class="chart-title">所有周邊紀錄</div>
+      <div id="accessoryAllList"></div>
+      <div id="accessoryPagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;"></div>
+    </div>
+
+  </div>
+
+</div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -733,16 +814,21 @@ let selectedType = '';
 let editingId = null;
 
 const TYPE_MAP = {
-  recharge: { name: '儲值', icon: '💎', cls: 'type-recharge' },
-  weekly:   { name: '週卡', icon: '📅', cls: 'type-weekly' },
-  pact:     { name: '密約', icon: '💌', cls: 'type-pact' },
-  package:  { name: '禮包', icon: '🎁', cls: 'type-package' },
-  other:    { name: '其他', icon: '✨', cls: 'type-other' },
+  recharge: { name: '儲值', icon: '💳', cls: 'type-recharge' },
+  pact: { name: '密約', icon: '💌', cls: 'type-pact' },
+  weekly: { name: '週卡', icon: '📅', cls: 'type-weekly' },
+  package: { name: '禮包', icon: '🎁', cls: 'type-package' },
+  accessory: { name: '周邊', icon: '🛍️', cls: 'type-accessory' },
+  other: { name: '其他', icon: '✦', cls: 'type-other' }
 };
 
 const CAT_COLORS = {
-  recharge: '#4a8fc4', weekly: '#8b7fd4',
-  pact: '#c48aa0', package: '#c4a064', other: '#888'
+  recharge: '#8b7fd4',
+  pact: '#c47070',
+  weekly: '#70b490',
+  package: '#f0a868',
+  accessory: '#d4a86e',
+  other: '#999'
 };
 
 // ── Init ──
@@ -800,11 +886,22 @@ function setupStars() {
 function switchTab(tab, btn) {
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  ['record','monthly','yearly'].forEach(t => {
+  ['record','monthly','yearly','accessory'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'monthly') renderMonthlyAnalysis();
   if (tab === 'yearly') renderYearlyAnalysis();
+  if (tab === 'accessory') renderAccessoryTab();
+}
+// ── Type Select ──
+function selectType(type) {
+  selectedType = type;
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.type === type);
+  });
+  ['recharge','pact','accessory','other'].forEach(t => {
+    document.getElementById('extra-'+t).classList.toggle('hidden', t !== type);
+  });
 }
 
 // ── Type Select ──
@@ -813,9 +910,41 @@ function selectType(type) {
   document.querySelectorAll('.type-btn').forEach(b => {
     b.classList.toggle('selected', b.dataset.type === type);
   });
-  ['recharge','pact','other'].forEach(t => {
+  ['recharge','pact','accessory','other'].forEach(t => {
     document.getElementById('extra-'+t).classList.toggle('hidden', t !== type);
   });
+}
+
+function updatePriceType() {
+  const priceType = document.querySelector('input[name="price-type"]:checked').value;
+  const wrapper = document.getElementById('price-input-wrapper');
+  const inputCny = document.getElementById('f-accessory-price-cny');
+  const inputTwd = document.getElementById('f-accessory-price-twd');
+  const converted = document.getElementById('f-accessory-price-converted');
+
+  if (priceType === 'none') {
+    wrapper.style.display = 'none';
+  } else if (priceType === 'cny') {
+    wrapper.style.display = 'block';
+    inputCny.style.display = 'block';
+    inputTwd.style.display = 'none';
+    converted.style.display = 'block';
+    inputCny.oninput = () => {
+      const cny = parseFloat(inputCny.value);
+      const rate = parseFloat(document.getElementById('f-exchange-rate').value) || 4.5;
+      if (!isNaN(cny) && cny > 0) {
+        const twd = (cny * rate).toFixed(2);
+        converted.textContent = `NT$${twd}`;
+      } else {
+        converted.textContent = '';
+      }
+    };
+  } else if (priceType === 'twd') {
+    wrapper.style.display = 'block';
+    inputCny.style.display = 'none';
+    inputTwd.style.display = 'block';
+    converted.style.display = 'none';
+  }
 }
 
 // ── Save Record ──
@@ -834,7 +963,18 @@ function saveRecord() {
     pactChar: '',
   };
 
-  if (selectedType === 'recharge') {
+  // 周邊特殊邏輯（簡化版）
+  if (selectedType === 'accessory') {
+    const product = document.getElementById('f-accessory-product').value.trim();
+    const isOfficial = document.getElementById('f-accessory-official').checked;
+
+    if (!product) { showToast('請輸入商品名稱'); return; }
+
+    record.accessoryData = {
+      product,
+      isOfficial
+    };
+  } else if (selectedType === 'recharge') {
     record.note = document.getElementById('f-recharge-note').value.trim();
   } else if (selectedType === 'pact') {
     const types = [];
@@ -852,7 +992,6 @@ function saveRecord() {
   showToast('✦ 已記錄消費');
   renderAll();
 }
-
 function clearForm() {
   document.getElementById('f-amount').value = '';
   setTodayDate();
@@ -879,6 +1018,7 @@ function openEdit(id) {
   editingId = id;
   const typeInfo = TYPE_MAP[r.type];
   let extraHtml = '';
+  
   if (r.type === 'recharge') {
     extraHtml = `<div class="form-group"><div class="form-label">備註</div><input type="text" id="edit-note" value="${r.note}" placeholder="點數備註"></div>`;
   } else if (r.type === 'pact') {
@@ -889,6 +1029,21 @@ function openEdit(id) {
         <label class="check-item"><input type="checkbox" id="edit-pact-s" ${r.pactTypes.includes('特別密約')?'checked':''}><div class="check-box"></div><span class="check-label">特別密約</span></label>
       </div></div>
       <div class="form-group"><div class="form-label">角色</div><input type="text" id="edit-pact-char" value="${r.pactChar}" placeholder="角色名稱"></div>`;
+  } else if (r.type === 'accessory') {
+    const accData = r.accessoryData || {};
+    extraHtml = `
+      <div class="form-group">
+        <div class="form-label">商品名稱</div>
+        <input type="text" id="edit-accessory-product" value="${accData.product || ''}" placeholder="商品名稱">
+      </div>
+      <div class="form-group">
+        <div class="form-label">官方授權</div>
+        <label class="check-item">
+          <input type="checkbox" id="edit-accessory-official" ${accData.isOfficial?'checked':''}>
+          <div class="check-box"></div>
+          <span class="check-label">官方谷/授權販售</span>
+        </label>
+      </div>`;
   } else if (r.type === 'other') {
     extraHtml = `<div class="form-group"><div class="form-label">備註</div><input type="text" id="edit-note" value="${r.note}" placeholder="備註說明"></div>`;
   }
@@ -918,7 +1073,6 @@ function openEdit(id) {
   `;
   openModal('editModal');
 }
-
 function saveEdit() {
   const r = records.find(x => x.id === editingId);
   if (!r) return;
@@ -951,7 +1105,7 @@ function renderSummary() {
 
   const cards = [
     { label:'當月總計', amount: total, icon:'◈' },
-    { label:'儲值', amount: byType.recharge, icon:'💎' },
+    { label:'儲值', amount: byType.recharge, icon:'💳' },
     { label:'密約', amount: byType.pact, icon:'💌' },
     { label:'週卡', amount: byType.weekly, icon:'📅' },
     { label:'禮包', amount: byType.package, icon:'🎁' },
@@ -969,27 +1123,41 @@ function renderSummary() {
 function renderRecords() {
   const recs = getMonthRecords(currentYear, currentMonth)
     .sort((a,b) => new Date(b.date) - new Date(a.date));
+  const monthTotal = recs.reduce((sum, r) => sum + r.amount, 0);
   const el = document.getElementById('recordsList');
   if (recs.length === 0) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>本月尚無消費紀錄<br><span style="font-size:11px">新增第一筆紀錄吧</span></div>`;
     return;
   }
-  el.innerHTML = recs.map(r => {
+  el.innerHTML = `
+    <div class="month-total-card">
+      <div class="month-total-label">當月累計</div>
+      <div class="month-total-amount">NT$${monthTotal.toLocaleString()}</div>
+    </div>
+  ` + recs.map(r => {
     const t = TYPE_MAP[r.type];
-    let badge = '', note = '';
+    let badge = '', note = '', displayName = t.name;
+    
     if (r.type === 'recharge' && r.note) note = r.note;
     if (r.type === 'pact') {
       if (r.pactTypes.length) badge = r.pactTypes.join('・');
       if (r.pactChar) note = r.pactChar;
     }
+    if (r.type === 'accessory') {
+  const accData = r.accessoryData || {};
+  displayName = '周邊';
+  note = accData.product || '';
+  if (accData.isOfficial) badge = '官谷';
+}
     if (r.type === 'other' && r.note) note = r.note;
+    
     const dateStr = new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'});
     return `
       <div class="record-item">
         <div class="record-type-icon ${t.cls}">${t.icon}</div>
         <div class="record-info">
           <div class="record-main">
-            <span class="record-type-name">${t.name}</span>
+            <span class="record-type-name">${displayName}</span>
             ${badge ? `<span class="record-badge">${badge}</span>` : ''}
             <span class="record-date">${dateStr}</span>
           </div>
@@ -1088,6 +1256,341 @@ function renderYearlyAnalysis() {
     <div class="sum-card"><div class="sum-icon">${v.icon}</div><div class="sum-label">${v.name}</div><div class="sum-amount">$${byType[k].toLocaleString()}</div></div>
     `).join('')}
   `;
+}
+
+// ── Accessory Handbook ──
+function renderAccessoryTab() {
+  renderAccessoryNotifications();
+  renderAccessoryMonthView();
+}
+
+function switchAccessoryView(view) {
+  document.getElementById('accessory-month-view').classList.toggle('hidden', view !== 'month');
+  document.getElementById('accessory-all-view').classList.toggle('hidden', view !== 'all');
+  
+  document.getElementById('btn-accessory-month').classList.toggle('selected', view === 'month');
+  document.getElementById('btn-accessory-all').classList.toggle('selected', view === 'all');
+  
+  if (view === 'all') renderAccessoryAllView();
+}
+
+function renderAccessoryNotifications() {
+  const allRecords = records.filter(r => r.type === 'accessory');
+  const today = new Date();
+  const notificationDays = 10;
+  
+  const notifications = allRecords.filter(r => {
+    const accData = r.accessoryData || {};
+    if (!accData.expectedArrivalDate) return false;
+    const arrivalDate = new Date(accData.expectedArrivalDate + 'T00:00:00');
+    const daysUntil = Math.ceil((arrivalDate - today) / (1000 * 60 * 60 * 24));
+    return daysUntil > 0 && daysUntil <= notificationDays;
+  });
+
+  const notifContainer = document.getElementById('accessoryNotifications');
+  if (notifications.length === 0) {
+    notifContainer.innerHTML = '';
+    return;
+  }
+
+  notifContainer.innerHTML = notifications.map(r => {
+    const accData = r.accessoryData || {};
+    const arrivalDate = new Date(accData.expectedArrivalDate + 'T00:00:00');
+    const today = new Date();
+    const daysUntil = Math.ceil((arrivalDate - today) / (1000 * 60 * 60 * 24));
+    const product = accData.product || '周邊';
+    
+    return `
+      <div style="background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 12px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 13px; color: var(--gold-light); font-weight: 500;">🔔 即將到貨</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${product} - 還剩 ${daysUntil} 天</div>
+        </div>
+        <button class="btn-ghost" style="padding: 6px 12px; font-size: 12px;" onclick="closeAccessoryNotification(this)">不再顯示</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function closeAccessoryNotification(btn) {
+  btn.closest('div').remove();
+}
+
+function renderAccessoryMonthView() {
+  const recs = records
+    .filter(r => r.type === 'accessory' && new Date(r.date).getFullYear() === currentYear && new Date(r.date).getMonth() + 1 === currentMonth)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  const el = document.getElementById('accessoryMonthList');
+  if (recs.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>本月尚無周邊紀錄<br><span style="font-size:11px">在記帳頁面新增吧</span></div>`;
+    return;
+  }
+
+  el.innerHTML = recs.map(r => {
+    const accData = r.accessoryData || {};
+    const product = accData.product || '周邊';
+    const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('zh-TW', {month:'2-digit', day:'2-digit'});
+    const arrivalStr = accData.expectedArrivalDate 
+      ? new Date(accData.expectedArrivalDate + 'T00:00:00').toLocaleDateString('zh-TW', {month:'2-digit', day:'2-digit'})
+      : '未填';
+    const priceStr = accData.originalPrice 
+      ? (accData.originalPrice.type === 'cny' 
+        ? `¥${accData.originalPrice.cny} (NT$${accData.originalPrice.twd.toLocaleString()})`
+        : `NT$${accData.originalPrice.twd.toLocaleString()}`)
+      : '-';
+    
+    return `
+      <div class="sum-card" style="cursor: pointer; margin-bottom: 12px;" onclick="toggleAccessoryDetail('${r.id}')">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div style="flex: 1;">
+            <div style="font-size: 14px; color: var(--gold-light); font-weight: 500;">${product}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">下單: ${dateStr} | 出貨: ${arrivalStr}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">原價: ${priceStr} | 總金額: NT$${r.amount.toLocaleString()}</div>
+            ${accData.isOfficial ? '<div style="font-size: 12px; color: #FFD700; margin-top: 6px;">✓ 官谷</div>' : ''}
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-edit" onclick="openAccessoryEdit('${r.id}'); event.stopPropagation();">編輯</button>
+            <button class="btn-danger" onclick="deleteRecord('${r.id}'); event.stopPropagation();">刪除</button>
+          </div>
+        </div>
+        <div id="detail-${r.id}" class="hidden" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-gold); font-size: 12px; color: var(--text-muted);">
+          <div>數量: ${accData.quantity || '-'}</div>
+          <div>賣場: ${accData.shop || '-'}</div>
+          <div>包裝費: NT$${(accData.packaging || 0).toLocaleString()}</div>
+          <div>運費: NT$${(accData.shipping || 0).toLocaleString()}</div>
+          ${accData.extras && accData.extras.length > 0 ? `<div>其他: ${accData.extras.map(e => `${e.name} NT$${e.amount.toLocaleString()}`).join(' | ')}</div>` : ''}
+          ${accData.note ? `<div>備註: ${accData.note}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleAccessoryDetail(id) {
+  const detail = document.getElementById('detail-' + id);
+  if (detail) detail.classList.toggle('hidden');
+}
+
+function renderAccessoryAllView() {
+  const allRecs = records.filter(r => r.type === 'accessory').sort((a, b) => new Date(b.date) - new Date(a.date));
+  const pageSize = 10;
+  const totalPages = Math.ceil(allRecs.length / pageSize);
+  
+  if (totalPages === 0) {
+    document.getElementById('accessoryAllList').innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>無周邊紀錄</div>`;
+    document.getElementById('accessoryPagination').innerHTML = '';
+    return;
+  }
+
+  const currentPage = parseInt(document.getElementById('accessoryCurrentPage')?.value || '1');
+  const startIdx = (currentPage - 1) * pageSize;
+  const pageRecs = allRecs.slice(startIdx, startIdx + pageSize);
+
+  // 按月份分組，設定背景色
+  const monthColors = {};
+  const colors = ['rgba(139,127,212,0.1)', 'rgba(74,143,196,0.1)', 'rgba(196,160,100,0.1)', 'rgba(100,150,120,0.1)'];
+  let colorIdx = 0;
+
+  pageRecs.forEach(r => {
+    const month = new Date(r.date).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit' });
+    if (!monthColors[month]) {
+      monthColors[month] = colors[colorIdx % colors.length];
+      colorIdx++;
+    }
+  });
+
+  document.getElementById('accessoryAllList').innerHTML = pageRecs.map(r => {
+    const accData = r.accessoryData || {};
+    const product = accData.product || '周邊';
+    const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('zh-TW', {year: 'numeric', month:'2-digit', day:'2-digit'});
+    const arrivalStr = accData.expectedArrivalDate 
+      ? new Date(accData.expectedArrivalDate + 'T00:00:00').toLocaleDateString('zh-TW', {month:'2-digit', day:'2-digit'})
+      : '未填';
+    const month = new Date(r.date).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit' });
+    const bgColor = monthColors[month];
+
+    return `
+      <div style="background: ${bgColor}; border: 1px solid var(--border-gold); border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <div style="color: var(--gold-light); font-weight: 500;">${product}</div>
+            <div style="color: var(--text-muted); margin-top: 4px;">下單: ${dateStr} | 出貨: ${arrivalStr}</div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-edit" onclick="openAccessoryEdit('${r.id}')" style="font-size: 11px; padding: 4px 8px;">編輯</button>
+            <button class="btn-danger" onclick="deleteRecord('${r.id}')" style="font-size: 11px; padding: 4px 8px;">刪除</button>
+          </div>
+        </div>
+        <div style="color: var(--text-muted);">原價: ${accData.originalPrice ? (accData.originalPrice.type === 'cny' ? `¥${accData.originalPrice.cny}` : `NT$${accData.originalPrice.twd.toLocaleString()}`) : '-'} | 下單金額: NT$${r.amount.toLocaleString()} | 數量: ${accData.quantity || '-'}${accData.isOfficial ? ' | ✓ 官谷' : ''}</div>
+      </div>
+    `;
+  }).join('');
+
+  // 分頁按鈕
+  let paginationHtml = '';
+  if (totalPages > 1) {
+    paginationHtml = `<button class="btn-ghost" onclick="changeAccessoryPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← 上一頁</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      paginationHtml += `<button class="btn-ghost" onclick="changeAccessoryPage(${i})" style="${i === currentPage ? 'background: var(--gold-dim); border-color: var(--gold);' : ''}">${i}</button>`;
+    }
+    paginationHtml += `<button class="btn-ghost" onclick="changeAccessoryPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一頁 →</button>`;
+  }
+  document.getElementById('accessoryPagination').innerHTML = paginationHtml;
+}
+
+function changeAccessoryPage(page) {
+  document.getElementById('accessoryCurrentPage').value = page;
+  renderAccessoryAllView();
+}
+
+function openAccessoryEdit(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  const accData = r.accessoryData || {};
+  
+  const priceTypeValue = !accData.originalPrice ? 'none' : accData.originalPrice.type;
+  
+  document.getElementById('editModalContent').innerHTML = `
+    <div class="form-row" style="margin-bottom: 14px;">
+      <div class="form-group" style="max-width: 160px;">
+        <div class="form-label">下單日期</div>
+        <input type="date" id="edit-date" value="${r.date}">
+      </div>
+      <div class="form-group">
+        <div class="form-label">下單金額（NT$）</div>
+        <input type="number" id="edit-amount" value="${r.amount}" min="0">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">商品名稱</div>
+      <input type="text" id="edit-acc-product" value="${accData.product || ''}" placeholder="名稱">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">預計出貨日</div>
+      <input type="date" id="edit-acc-arrival" value="${accData.expectedArrivalDate || ''}">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">賣場</div>
+      <input type="text" id="edit-acc-shop" value="${accData.shop || ''}" placeholder="例如：疊紙心意旗艦店">
+    </div>
+
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">數量</div>
+      <input type="number" id="edit-acc-quantity" value="${accData.quantity || 1}" min="1">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">包裝費/手續費</div>
+      <input type="number" id="edit-acc-packaging" value="${accData.packaging || 0}" min="0" step="0.01">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">運費</div>
+      <input type="number" id="edit-acc-shipping" value="${accData.shipping || 0}" min="0" step="0.01">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">備註</div>
+      <textarea id="edit-acc-note" placeholder="例如：預購、黃色款" style="min-height: 60px;">${accData.note || ''}</textarea>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 14px;">
+      <div class="form-label">官方授權</div>
+      <label class="check-item">
+        <input type="checkbox" id="edit-acc-official" ${accData.isOfficial ? 'checked' : ''}>
+        <div class="check-box"></div>
+        <span class="check-label">官方谷/授權販售</span>
+      </label>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+      <button class="btn-ghost" onclick="closeModal('editModal')">取消</button>
+      <button class="btn-primary" onclick="saveAccessoryEdit()">✦ 儲存</button>
+    </div>
+  `;
+  openModal('editModal');
+}
+
+function updateEditPriceType() {
+  const priceType = document.querySelector('input[name="edit-price-type"]:checked').value;
+  const wrapper = document.getElementById('edit-price-wrapper');
+  const inputCny = document.getElementById('edit-acc-price-cny');
+  const inputTwd = document.getElementById('edit-acc-price-twd');
+  const converted = document.getElementById('edit-price-converted');
+
+  if (priceType === 'none') {
+    wrapper.style.display = 'none';
+  } else {
+    wrapper.style.display = 'block';
+    if (priceType === 'cny') {
+      inputCny.style.display = 'block';
+      inputTwd.style.display = 'none';
+      converted.style.display = 'block';
+      
+      inputCny.oninput = () => {
+        const cny = parseFloat(inputCny.value);
+        const rateInput = document.getElementById('edit-exchange-rate');
+        const rate = parseFloat(rateInput.value) || 4.5;
+        if (!isNaN(cny) && cny > 0) {
+          const twd = (cny * rate).toFixed(2);
+          converted.textContent = `¥${cny} = NT$${twd}`;
+        } else {
+          converted.textContent = '';
+        }
+      };
+    } else if (priceType === 'twd') {
+      inputCny.style.display = 'none';
+      inputTwd.style.display = 'block';
+      converted.style.display = 'none';
+    }
+  }
+}
+
+function saveAccessoryEdit() {
+  const r = records.find(x => x.id === editingId);
+  if (!r) return;
+
+  r.date = document.getElementById('edit-date').value;
+  r.amount = parseFloat(document.getElementById('edit-amount').value) || r.amount;
+
+  const priceType = document.querySelector('input[name="edit-price-type"]:checked').value;
+  let originalPrice = null;
+  if (priceType === 'cny') {
+    const priceCny = parseFloat(document.getElementById('edit-acc-price-cny').value);
+    if (!isNaN(priceCny) && priceCny > 0) {
+      originalPrice = { type: 'cny', cny: priceCny, twd: (priceCny * 4.5).toFixed(2) };
+    }
+  } else if (priceType === 'twd') {
+    const priceTwd = parseFloat(document.getElementById('edit-acc-price-twd').value);
+    if (!isNaN(priceTwd) && priceTwd > 0) {
+      originalPrice = { type: 'twd', twd: priceTwd };
+    }
+  }
+
+  r.accessoryData = {
+    product: document.getElementById('edit-acc-product').value.trim(),
+    expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
+    shop: document.getElementById('edit-acc-shop').value.trim(),
+    originalPrice,
+    quantity: parseInt(document.getElementById('edit-acc-quantity').value) || 1,
+    packaging: parseFloat(document.getElementById('edit-acc-packaging').value) || 0,
+    shipping: parseFloat(document.getElementById('edit-acc-shipping').value) || 0,
+    note: document.getElementById('edit-acc-note').value.trim(),
+    isOfficial: document.getElementById('edit-acc-official').checked
+  };
+
+  saveData();
+  closeModal('editModal');
+  renderAccessoryTab();
+  showToast('✦ 已更新周邊紀錄');
 }
 
 function goToMonth(m) {
