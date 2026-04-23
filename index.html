@@ -1398,7 +1398,7 @@ function renderMonthlyAnalysis() {
         const pct = total > 0 ? Math.round(amt/total*100) : 0;
         const cashAmt = recs.filter(r => r.type === key && r.payMethod !== 'points').reduce((s,r) => s+r.amount, 0);
         const pointsAmt = recs.filter(r => r.type === key && r.payMethod === 'points').reduce((s,r) => s+r.amount, 0);
-        const note = pointsAmt > 0 ? `<div style="font-size:10px; color:var(--text-muted); margin-top:2px;">(含現金 NT$${cashAmt.toLocaleString()} ＋ 點數 ${pointsAmt.toLocaleString()}點)</div>` : '';
+        const note = pointsAmt > 0 ? `<div style="font-size:10px; color:var(--text-muted); margin-top:2px;">(現金 $${cashAmt.toLocaleString()} ＋ 點數 ${pointsAmt.toLocaleString()})</div>` : '';
         return `<div class="cat-row">
           <div class="cat-dot" style="background:${CAT_COLORS[key]}"></div>
           <div class="cat-name"><div>${info.icon} ${info.name}</div><div style="padding-left:1.4em;">${note}</div></div>
