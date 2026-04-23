@@ -1398,14 +1398,17 @@ function renderMonthlyAnalysis() {
         const pct = total > 0 ? Math.round(amt/total*100) : 0;
         const cashAmt = recs.filter(r => r.type === key && r.payMethod !== 'points').reduce((s,r) => s+r.amount, 0);
         const pointsAmt = recs.filter(r => r.type === key && r.payMethod === 'points').reduce((s,r) => s+r.amount, 0);
-        const note = pointsAmt > 0 ? `<div style="font-size:10px; color:var(--text-muted); margin-top:2px;">(現金 $${cashAmt.toLocaleString()} ＋ 點數 ${pointsAmt.toLocaleString()})</div>` : '';
-        return `<div class="cat-row">
-          <div class="cat-dot" style="background:${CAT_COLORS[key]}"></div>
-          <div class="cat-name"><div>${info.icon} ${info.name}</div><div style="padding-left:1.4em;">${note}</div></div>
-          <div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${CAT_COLORS[key]}"></div></div>
-          <div class="cat-pct">${pct}%</div>
-          <div class="cat-amount">$${amt.toLocaleString()}</div>
-        </div>`;
+        const note = pointsAmt > 0 ? `(現金 $${cashAmt.toLocaleString()} ＋ 點數 ${pointsAmt.toLocaleString()})` : '';
+        return `<div>
+  <div class="cat-row">
+    <div class="cat-dot" style="background:${CAT_COLORS[key]}"></div>
+    <div class="cat-name">${info.icon} ${info.name}</div>
+    <div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${CAT_COLORS[key]}"></div></div>
+    <div class="cat-pct">${pct}%</div>
+    <div class="cat-amount">$${amt.toLocaleString()}</div>
+  </div>
+  ${note ? `<div style="font-size:10px; color:var(--text-muted); padding-left:2em; margin-top:2px; margin-bottom:4px;">${note}</div>` : ''}
+</div>`;
       }).join('')}</div>`;
   document.getElementById('monthlyBreakdown').innerHTML = breakHtml;
 
