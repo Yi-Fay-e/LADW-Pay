@@ -1223,13 +1223,13 @@ function renderSummary() {
     { label:'點數消耗', amount: pointsSpend, icon:'💎' },
   ];
 
-  document.getElementById('summaryGrid').innerHTML = cards.map(c => `
-    <div class="sum-card">
-      <div class="sum-icon">${c.icon}</div>
-      <div class="sum-label">${c.label}</div>
-      <div class="sum-amount">${c.label === '點數消耗' ? '' : '$'}${c.amount.toLocaleString()}${c.label === '點數消耗' ? '點' : ''}</div>
+  document.getElementById('summaryGrid').innerHTML = `
+    <div style="display:flex; align-items:center; gap:6px; padding: 10px 16px; border: 1px solid var(--border-gold); border-radius: 12px; font-size:13px; color:var(--text-muted); flex-wrap:wrap;">
+      <span>💵 現金支出 <span style="color:var(--gold-light);">NT$${cashSpend.toLocaleString()}</span></span>
+      <span style="color:var(--border-gold);">·</span>
+      <span>💎 點數消耗 <span style="color:#6495ed;">${pointsSpend.toLocaleString()}點</span></span>
     </div>
-  `).join('');
+  `;
 }
 
 function renderRecords() {
