@@ -606,6 +606,7 @@
     .header { flex-wrap: wrap; gap: 12px; }
     .form-row { flex-direction: column; }
     .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    #accessory-month-filter { max-width: 120px; }
     #summaryGrid { display:block; width:100%; }
     #accessory-month-view, #accessory-all-view { margin: 0 !important; }
     #accessoryMonthList, #accessoryAllList { padding: 0 !important; }
@@ -833,10 +834,13 @@
   <div id="tab-accessory" class="hidden analysis-wrap">
     
     <!-- 月份切換 -->
-    <div style="display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; align-items: center;">
+    <div style="display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; align-items: center; flex-wrap: wrap;">
   <button class="btn-ghost" onclick="switchAccessoryView('month')" id="btn-accessory-month">當月</button>
   <button class="btn-ghost" onclick="switchAccessoryView('all')" id="btn-accessory-all">全部</button>
   <button class="btn-ghost" onclick="openAccessoryAdd()" id="btn-accessory-add">✦ 新增周邊</button>
+  <select id="accessory-month-filter" onchange="filterAccessoryByMonth(this.value)" class="hidden" style="background:#0c1430; border:1px solid var(--border-gold); color:var(--text-muted); border-radius:20px; padding:6px 12px; font-size:12px; font-family:'Noto Sans TC',sans-serif; cursor:pointer;">
+    <option value="all">全部月份</option>
+  </select>
 </div>
 
     <!-- 出貨前通知區域 -->
@@ -1514,7 +1518,29 @@ function switchAccessoryView(view) {
   document.getElementById('btn-accessory-month').classList.toggle('selected', view === 'month');
   document.getElementById('btn-accessory-all').classList.toggle('selected', view === 'all');
   document.getElementById('btn-accessory-add').classList.remove('selected');
-  if (view === 'all') renderAccessoryAllView();
+  const filter = document.getElementById('accessory-month-filter');
+  if (view === 'all') {
+    filter.classList.remove('hidden');
+    populateAccessoryMonthFilter();
+    renderAccessoryAllView();
+  } else {
+    filter.classList.add('hidden');
+  }
+}
+
+function populateAccessoryMonthFilter() {
+  const allRecs = records.filter(r => r.type === 'accessory');
+  const months = [...new Set(allRecs.map(r => r.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
+  const filter = document.getElementById('accessory-month-filter');
+  filter.innerHTML = '<option value="all">全部月份</option>' +
+    months.map(m => {
+      const [y, mo] = m.split('-');
+      return `<option value="${m}">${y}年${parseInt(mo)}月</option>`;
+    }).join('');
+}
+
+function filterAccessoryByMonth(value) {
+  renderAccessoryAllView(value === 'all' ? null : value);
 }
 function renderAccessoryNotifications() {
   document.getElementById('accessoryNotifications').innerHTML = '';
@@ -1657,8 +1683,9 @@ function toggleAccessoryAllDetail(id) {
   if (detail) detail.classList.toggle('hidden');
 }
 
-function renderAccessoryAllView() {
-  const allRecs = records.filter(r => r.type === 'accessory').sort((a, b) => new Date(b.date) - new Date(a.date) || b.id.localeCompare(a.id));
+function renderAccessoryAllView(filterMonth = null) {
+  let allRecs = records.filter(r => r.type === 'accessory').sort((a, b) => new Date(b.date) - new Date(a.date) || b.id.localeCompare(a.id));
+  if (filterMonth) allRecs = allRecs.filter(r => r.date.startsWith(filterMonth));
   const pageSize = 10;
   const totalPages = Math.ceil(allRecs.length / pageSize);
   
