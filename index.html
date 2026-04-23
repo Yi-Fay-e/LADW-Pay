@@ -606,8 +606,10 @@
     .header { flex-wrap: wrap; gap: 12px; }
     .form-row { flex-direction: column; }
     .summary-grid { grid-template-columns: repeat(3, 1fr); }
-    #monthNavWrap { display: none !important; }
-    #monthNavMobile { display: flex !important; }
+    #monthNavWrap { display: flex !important; }
+    .header-month-nav { gap: 4px; }
+    .current-month { font-size: 13px; }
+    .month-btn { font-size: 16px; padding: 2px 6px; }
     #accessory-month-filter { max-width: 120px; }
     #summaryGrid { display:block; width:100%; }
     #accessory-month-view, #accessory-all-view { margin: 0 !important; }
@@ -669,14 +671,6 @@
 
   <!-- ═══ TAB: RECORD ═══ -->
   <div id="tab-record">
-    <div id="monthNavMobile" style="display:none; flex-direction:column; align-items:center; gap:6px; margin-bottom:16px;">
-      <div class="header-month-nav">
-        <button class="month-btn" onclick="changeMonth(-1)">‹</button>
-        <div class="current-month" id="currentMonthLabelMobile"></div>
-        <button class="month-btn" onclick="changeMonth(1)">›</button>
-      </div>
-      <button class="btn-ghost" onclick="resetCurrentMonth()" style="font-size: 11px; padding: 3px 10px;">回到本月</button>
-    </div>
 
     <!-- Summary -->
     <div class="summary-grid" id="summaryGrid"></div>
