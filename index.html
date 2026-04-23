@@ -909,7 +909,7 @@
 <!-- Edit Modal -->
 <div class="modal-overlay" id="editModal" onclick="event.stopPropagation()">
   <div class="modal-box">
-    <div class="modal-title">編輯紀錄</div>
+    <div class="modal-title" id="editModalTitle">編輯紀錄</div>
     <button class="modal-close" onclick="closeModal('editModal')">×</button>
     <div id="editModalContent"></div>
   </div>
@@ -1139,6 +1139,7 @@ function openEdit(id) {
   const r = records.find(x => x.id === id);
   if (!r) return;
   editingId = id;
+  document.getElementById('editModalTitle').textContent = '編輯紀錄';
   const typeInfo = TYPE_MAP[r.type];
   let extraHtml = '';
   
@@ -2168,11 +2169,11 @@ function saveAccessoryEdit() {
 }
 function openAccessoryAdd() {
   editingId = null;
+  document.getElementById('editModalTitle').textContent = '新增周邊紀錄';
   document.getElementById('btn-accessory-month').classList.remove('selected');
 document.getElementById('btn-accessory-all').classList.remove('selected');
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('editModalContent').innerHTML = `
-    <div style="font-size:15px; color:var(--gold-light); font-family:'Noto Serif TC',serif; margin-bottom:16px;">✦ 新增周邊紀錄</div>
     <div class="form-row" style="margin-bottom: 14px;">
       <div class="form-group" style="max-width: 160px;">
         <div class="form-label">下單日期</div>
