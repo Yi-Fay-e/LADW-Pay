@@ -606,6 +606,8 @@
     .header { flex-wrap: wrap; gap: 12px; }
     .form-row { flex-direction: column; }
     .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    #summaryGrid { display:block; width:100%; }
+#summaryGrid > div { width:100% !important; box-sizing:border-box; white-space:nowrap; overflow:hidden; }
     .nav-tabs { gap: 0; }
 .nav-tab { padding: 8px 4px; font-size: 11px; flex: 1; text-align: center; white-space: normal; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .nav-tab:last-child { flex: 1; border-top: none; text-align: center; padding-left: 4px; }
