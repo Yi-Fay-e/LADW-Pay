@@ -1224,7 +1224,7 @@ function renderSummary() {
   ];
 
   document.getElementById('summaryGrid').innerHTML = `
-    <div style="display:flex; align-items:center; gap:6px; padding: 10px 16px; border: 1px solid var(--border-gold); border-radius: 12px; font-size:13px; color:var(--text-muted); flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:6px; padding: 10px 16px; border: 1px solid var(--border-gold); border-radius: 12px; font-size:13px; color:var(--text-muted); width:100%; box-sizing:border-box;">
       <span>💵 現金支出 <span style="color:var(--gold-light);">NT$${cashSpend.toLocaleString()}</span></span>
       <span style="color:var(--border-gold);">·</span>
       <span>💎 點數消耗 <span style="color:#6495ed;">${pointsSpend.toLocaleString()}點</span></span>
