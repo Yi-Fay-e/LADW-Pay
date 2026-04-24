@@ -1380,12 +1380,12 @@ function renderMonthlyAnalysis() {
         <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${(() => { const top = recs.reduce((a,b)=>a.amount>b.amount?a:b); return TYPE_MAP[top.type].name + (top.note ? '・'+top.note : top.accessoryData?.product ? '・'+top.accessoryData.product : ''); })()}</div>
       </div>
       <div style="flex:1; padding:10px; background:rgba(196,160,100,0.06); border:1px solid var(--border-gold); border-radius:8px;">
-        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">🛍️ 周邊 vs 遊戲內</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">🛍️ 周邊 vs 深空</div>
         <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
           <div style="font-size:13px; color:var(--gold-light);">周邊 NT$${recs.filter(r=>r.type==='accessory').reduce((s,r)=>s+r.amount,0).toLocaleString()}</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-          <div style="font-size:13px; color:var(--purple-light);">遊戲內 NT$${recs.filter(r=>r.type!=='accessory').reduce((s,r)=>s+r.amount,0).toLocaleString()}</div>
+          <div style="font-size:13px; color:var(--purple-light);">深空 NT$${recs.filter(r=>r.type!=='accessory').reduce((s,r)=>s+r.amount,0).toLocaleString()}</div>
         </div>
       </div>
     </div>
