@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>深空帳本 · Love & Deepspace</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 
@@ -910,6 +912,19 @@
     <div style="display: flex; gap: 10px; justify-content: center;">
       <button class="btn-ghost" onclick="dismissNotificationForever()">已經出貨了</button>
       <button class="btn-primary" onclick="dismissNotificationToday()">✦ 知道了</button>
+    </div>
+  </div>
+</div>
+<!-- Crop Modal -->
+<div class="modal-overlay" id="cropModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-title">裁切頭像</div>
+    <div style="width:100%; max-height:360px; overflow:hidden; border-radius:12px; margin-bottom:16px;">
+      <img id="cropImage" style="max-width:100%; display:block;">
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn-ghost" onclick="closeCropModal()">取消</button>
+      <button class="btn-primary" onclick="confirmCrop()">✦ 確認裁切</button>
     </div>
   </div>
 </div>
@@ -2331,17 +2346,43 @@ function saveUserSettings() {
   showToast('✦ 設定已儲存');
 }
 
+let cropper = null;
+
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const src = ev.target.result;
-    userSettings.avatar = src;
-    setAvatar(src);
-    document.getElementById('avatarLarge').innerHTML = `<img src="${src}">`;
+    const cropImage = document.getElementById('cropImage');
+    cropImage.src = ev.target.result;
+    openModal('cropModal');
+    setTimeout(() => {
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(cropImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 0.8,
+      });
+    }, 300);
   };
   reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+  if (cropper) { cropper.destroy(); cropper = null; }
+  closeModal('cropModal');
+  document.getElementById('avatarFileInput').value = '';
+}
+
+function confirmCrop() {
+  if (!cropper) return;
+  const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
+  const src = canvas.toDataURL('image/jpeg', 0.9);
+  userSettings.avatar = src;
+  setAvatar(src);
+  document.getElementById('avatarLarge').innerHTML = `<img src="${src}">`;
+  if (cropper) { cropper.destroy(); cropper = null; }
+  closeModal('cropModal');
 }
 
 function setAvatar(src) {
