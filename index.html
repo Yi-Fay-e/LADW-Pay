@@ -431,6 +431,7 @@
     background: var(--bg-card2);
   }
   .type-recharge { border-color: rgba(80,140,200,0.5); color: var(--blue-star); }
+  .type-monthly  { border-color: rgba(167,139,202,0.5); color: #c4a8e8; }
   .type-weekly { border-color: rgba(139,127,212,0.5); color: var(--purple-light); }
   .type-pact { border-color: rgba(200,140,170,0.5); color: #d4a0c0; }
   .type-package { border-color: rgba(196,160,100,0.5); color: var(--gold-light); }
@@ -699,6 +700,7 @@
         <div class="form-label">消費類型</div>
         <div class="type-selector" id="typeSelector">
           <button class="type-btn" data-type="recharge" onclick="selectType('recharge')">💳 儲值</button>
+          <button class="type-btn" data-type="monthly" onclick="selectType('monthly')">🌙 月卡</button>
           <button class="type-btn" data-type="weekly" onclick="selectType('weekly')">📅 週卡</button>
           <button class="type-btn" data-type="pact" onclick="selectType('pact')">💌 密約</button>
           <button class="type-btn" data-type="package" onclick="selectType('package')">🎁 禮包</button>
@@ -712,6 +714,17 @@
         <div class="form-group">
           <div class="form-label">備註</div>
           <input type="text" id="f-recharge-note" placeholder="例如：500點">
+        </div>
+      </div>
+
+      <!-- Monthly extra -->
+      <div id="extra-monthly" class="hidden" style="margin-bottom:14px">
+        <div class="form-group">
+          <div class="form-label">付款方式</div>
+          <div class="type-selector">
+            <button class="type-btn selected" data-pay="cash" onclick="selectPayMethod('monthly','cash')">💵 現金</button>
+            <button class="type-btn" data-pay="points" onclick="selectPayMethod('monthly','points')">💎 點數</button>
+          </div>
         </div>
       </div>
 
@@ -876,7 +889,9 @@
 <div style="position: fixed; bottom: 24px; right: 24px; display: flex; gap: 8px; z-index: 50;">
   <button class="btn-ghost" onclick="exportData()" style="font-size: 11px; padding: 5px 12px;">⬆ 匯出</button>
   <button class="btn-ghost" onclick="document.getElementById('importFileInput').click()" style="font-size: 11px; padding: 5px 12px;">⬇ 匯入</button>
+  <button class="btn-ghost" onclick="document.getElementById('legacyImportFileInput').click()" style="font-size: 11px; padding: 5px 12px; color: var(--purple-light); border-color: rgba(139,127,212,0.4);" title="匯入舊版「獵人錢包」備份檔">🔄 舊版轉換</button>
   <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+  <input type="file" id="legacyImportFileInput" accept=".json" style="display:none" onchange="importLegacyData(event)">
 </div>
 <div class="toast" id="toast"></div>
 
@@ -948,8 +963,9 @@ let editingId = null;
 
 const TYPE_MAP = {
   recharge: { name: '儲值', icon: '💳', cls: 'type-recharge' },
-  pact: { name: '密約', icon: '💌', cls: 'type-pact' },
+  monthly:  { name: '月卡', icon: '🌙', cls: 'type-monthly' },
   weekly: { name: '週卡', icon: '📅', cls: 'type-weekly' },
+  pact: { name: '密約', icon: '💌', cls: 'type-pact' },
   package: { name: '禮包', icon: '🎁', cls: 'type-package' },
   accessory: { name: '周邊', icon: '🛍️', cls: 'type-accessory' },
   other: { name: '其他', icon: '✦', cls: 'type-other' }
@@ -957,6 +973,7 @@ const TYPE_MAP = {
 
 const CAT_COLORS = {
   recharge: '#8b7fd4',
+  monthly:  '#a78bca',
   pact: '#c47070',
   weekly: '#70b490',
   package: '#f0a868',
@@ -1043,7 +1060,7 @@ function selectType(type) {
   document.querySelectorAll('.type-btn').forEach(b => {
     b.classList.toggle('selected', b.dataset.type === type);
   });
-  ['recharge','pact','accessory','other','package'].forEach(t => {
+  ['recharge','monthly','pact','accessory','other','package'].forEach(t => {
     document.getElementById('extra-'+t).classList.toggle('hidden', t !== type);
   });
 }
@@ -1128,6 +1145,9 @@ function saveRecord() {
   } else if (selectedType === 'package') {
     const payBtn = document.querySelector('#extra-package .type-btn[data-pay].selected');
     record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
+  } else if (selectedType === 'monthly') {
+    const payBtn = document.querySelector('#extra-monthly .type-btn[data-pay].selected');
+    record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
   } else if (selectedType === 'other') {
     record.note = document.getElementById('f-other-note').value.trim();
     const payBtn = document.querySelector('#extra-other .type-btn[data-pay].selected');
@@ -1145,7 +1165,7 @@ function clearForm() {
   setTodayDate();
   selectedType = '';
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-  ['recharge','pact','other','package'].forEach(t => document.getElementById('extra-'+t).classList.add('hidden'));
+  ['recharge','monthly','pact','other','package'].forEach(t => document.getElementById('extra-'+t).classList.add('hidden'));
   document.getElementById('f-recharge-note').value = '';
   document.getElementById('f-pact-char').value = '';
   document.getElementById('f-other-note').value = '';
@@ -1302,6 +1322,7 @@ function renderRecords() {
     
     const typeStyles = {
       recharge:  { border: '#4a8fc4', bg: 'rgba(74,143,196,0.06)' },
+      monthly:   { border: '#a78bca', bg: 'rgba(167,139,202,0.06)' },
       weekly:    { border: '#70b490', bg: 'rgba(112,180,144,0.06)' },
       pact:      { border: '#c47070', bg: 'rgba(196,112,112,0.06)' },
       package:   { border: '#e07830', bg: 'rgba(224,120,48,0.06)' },
@@ -2411,6 +2432,135 @@ function saveData() {
   localStorage.setItem('ds_records', JSON.stringify(records));
   localStorage.setItem('ds_user', JSON.stringify(userSettings));
 }
+// ── 舊版「獵人錢包」資料轉換匯入 ──────────────────────────────
+function importLegacyData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const raw = JSON.parse(ev.target.result);
+
+      // 舊版匯出格式：{ activities, payments, profile } 或直接就是 payments 陣列
+      const payments = Array.isArray(raw) ? raw
+        : (raw.payments || []);
+      const profile  = raw.profile || null;
+
+      if (!payments.length) {
+        showToast('找不到舊版付款資料，請確認檔案');
+        return;
+      }
+
+      // ── 型別對照表 ─────────────────────────────────────────
+      // 舊版 pkgType: 'limited' | 'revival' → 新版 type: 'package'
+      // 舊版 type: '晶鑽儲值'              → 新版 type: 'recharge'
+      // 舊版 type: '月卡'                  → 新版 type: 'weekly'
+      // 舊版 type: '其他課金'              → 新版 type: 'other'
+      // 舊版 type: '協會等級禮包'          → 新版 type: 'package'
+      // 舊版 payMethod: 'mycard'           → 新版 payMethod: 'points'
+
+      // 舊版禮包名稱 ref（活動名稱）→ 記帳備註
+      // 舊版 ref === '一般儲值' → 表示是一般儲值分頁記的，不帶活動名稱
+
+      function mapType(p) {
+        if (p.pkgType === 'limited' || p.pkgType === 'revival') return 'package';
+        switch (p.type) {
+          case '晶鑽儲值':          return 'other';
+          case '月卡':              return 'monthly';
+          case '週卡':              return 'weekly';
+          case '每日限購(珍貴)':    return 'weekly';
+          case '每日限購(璀璨)':    return 'weekly';
+          case '特別密約':          return 'pact';
+          case '升級版特別密約':    return 'pact';
+          case '其他課金':          return 'other';
+          case '協會等級禮包':      return 'package';
+          default:                  return 'other';
+        }
+      }
+
+      function mapPayMethod(p) {
+        if (p.payMethod === 'mycard') return 'points';
+        return undefined; // 現金→不設（深空帳本預設就是現金）
+      }
+
+      function buildNote(p) {
+        const parts = [];
+        if (p.pkgType === 'limited' || p.pkgType === 'revival') {
+          const side = p.pkgType === 'limited' ? '限定' : '復刻';
+          parts.push(`${side} ${p.type}`);
+          if (p.qty && p.qty > 1) parts.push(`x${p.qty}`);
+        }
+        if (p.type === '晶鑽儲值' && p.crystalVal) {
+          parts.push(`晶鑽 ${p.crystalVal}`);
+        }
+        if (p.type === '特別密約' || p.type === '升級版特別密約') {
+          parts.push(p.type);
+        }
+        if (p.type === '月卡') {
+          parts.push('月卡(鎏金卡)');
+          if (p.qty && p.qty > 1) parts.push(`x${p.qty}`);
+        }
+        if (p.type === '週卡') parts.push('週卡(特權)');
+        if (p.type === '每日限購(珍貴)') parts.push('每日限購(珍貴)');
+        if (p.type === '每日限購(璀璨)') parts.push('每日限購(璀璨)');
+        if (p.ref && p.ref !== '一般儲值') {
+          parts.push(`【${p.ref}】`);
+        }
+        return parts.join(' ');
+      }
+
+      const converted = payments.map(p => ({
+        id: 'legacy_' + (p.id || p.timestamp || Math.random().toString(36).slice(2)),
+        date: p.date,
+        type: mapType(p),
+        amount: p.amount || 0,
+        note: buildNote(p),
+        payMethod: mapPayMethod(p),
+        // 周邊/密約類欄位不適用，留空
+        pactTypes: [],
+        pactChar: '',
+        accessoryData: null
+      }));
+
+      // 處理使用者名稱（只在新版沒有名稱時才帶入）
+      if (profile && profile.hunterName && !userSettings.name) {
+        userSettings.name = profile.hunterName;
+        localStorage.setItem('ds_user', JSON.stringify(userSettings));
+        loadUserSettings();
+      }
+
+      // 選擇匯入方式
+      const choice = confirm(
+        `找到 ${converted.length} 筆舊版紀錄可轉換。\n\n確定 → 覆蓋（清除現有資料）\n取消 → 合併（保留現有資料，跳過重複 id）`
+      );
+
+      if (choice) {
+        records = converted;
+      } else {
+        const existingIds = new Set(records.map(r => r.id));
+        const newRecs = converted.filter(r => !existingIds.has(r.id));
+        records = [...records, ...newRecs];
+        const added = newRecs.length;
+        const skipped = converted.length - added;
+        showToast(`✦ 合併完成：新增 ${added} 筆，略過重複 ${skipped} 筆`);
+        saveData(); renderAll();
+        e.target.value = '';
+        return;
+      }
+
+      saveData();
+      renderAll();
+      showToast(`✦ 舊版資料轉換完成，共 ${converted.length} 筆`);
+    } catch (err) {
+      console.error(err);
+      showToast('轉換失敗，請確認是舊版獵人錢包的備份檔（.json）');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+// ────────────────────────────────────────────────────────────
+
 function exportData() {
   const data = {
     records: records,
