@@ -1,4 +1,3 @@
-libs
 <!DOCTYPE html>
 <html lang="zh-TW">
 
@@ -289,14 +288,15 @@ libs
 
     /* ── Add Record Panel ── */
     .add-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border-gold);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-    }
+  background: linear-gradient(135deg, rgba(20,28,60,0.95) 0%, rgba(12,18,45,0.98) 100%);
+  border: 1px solid rgba(196,160,100,0.35);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,127,212,0.08);
+}
 
     .add-panel::after {
       content: '';
@@ -2353,7 +2353,7 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
   today.setHours(0,0,0,0);
   const arrival = new Date(accData.expectedArrivalDate + 'T00:00:00');
   const diffDays = Math.ceil((arrival - today) / (1000 * 60 * 60 * 24));
-  if (diffDays < 0) return '#c47070';      // 已過期未出貨
+  if (diffDays < 0) return '#ff6b6b';      // 已過期未出貨
   if (diffDays <= 10) return '#e07830';    // 快到了
   return '#7ec8e3';                        // 還很遠
 }
