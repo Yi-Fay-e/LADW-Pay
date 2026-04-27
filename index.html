@@ -756,6 +756,21 @@
     /* Bar Chart */
     .bar-chart {}
 
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+    .current-month-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: pulse-dot 1.2s ease-in-out infinite;
+      vertical-align: middle;
+      box-shadow: 0 0 6px rgba(196,160,100,0.6);
+    }
     .bar-row {
       display: flex;
       align-items: center;
@@ -1319,6 +1334,11 @@
             </label>
           </div>
 
+          <div class="form-group">
+            <div class="form-label">預計出貨日 <span style="color:var(--text-muted); font-size:11px;">（選填）</span></div>
+            <input type="date" id="f-accessory-arrival">
+          </div>
+
         </div>
         <!-- Other extra -->
         <div id="extra-other" class="hidden" style="margin-bottom:14px">
@@ -1701,9 +1721,9 @@
           record.accessoryData = {
             product,
             isOfficial,
-            items: [],  // 新增：商品項目
+            items: [],
             shop: '',
-            expectedArrivalDate: '',
+            expectedArrivalDate: document.getElementById('f-accessory-arrival').value || '',
             quantity: 1,
             packaging: 0,
             shipping: 0,
@@ -1736,23 +1756,37 @@
         renderAll();
       }
       function clearForm() {
-        document.getElementById('f-amount').value = '';
+        document.getElementById('f-amount').value = '0';
         setTodayDate();
         selectedType = '';
         document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-        ['recharge', 'monthly', 'pact', 'other', 'package'].forEach(t => document.getElementById('extra-' + t).classList.add('hidden'));
+        ['recharge', 'monthly', 'pact', 'other', 'package', 'accessory'].forEach(t => document.getElementById('extra-' + t).classList.add('hidden'));
         document.getElementById('f-recharge-note').value = '';
         document.getElementById('f-pact-char').value = '';
         document.getElementById('f-other-note').value = '';
         document.getElementById('pact-normal').checked = false;
         document.getElementById('pact-special').checked = false;
+        const arrivalField = document.getElementById('f-accessory-arrival');
+        if (arrivalField) arrivalField.value = '';
       }
 
       // ── Delete / Edit ──
       function deleteRecord(id) {
         if (!confirm('確定刪除這筆紀錄？')) return;
-        records = records.filter(r => r.id !== id);
-        saveData(); renderAll(); renderAccessoryTab(); showToast('已刪除紀錄');
+        // 嘗試淡出動畫
+        const el = document.querySelector(`[data-record-id="${id}"]`);
+        if (el) {
+          el.style.transition = 'opacity 0.3s, transform 0.3s';
+          el.style.opacity = '0';
+          el.style.transform = 'translateX(20px)';
+          setTimeout(() => {
+            records = records.filter(r => r.id !== id);
+            saveData(); renderAll(); renderAccessoryTab(); showToast('已刪除紀錄');
+          }, 300);
+        } else {
+          records = records.filter(r => r.id !== id);
+          saveData(); renderAll(); renderAccessoryTab(); showToast('已刪除紀錄');
+        }
       }
 
       function openEdit(id) {
@@ -1899,7 +1933,7 @@
           const monthTotal = recs.reduce((sum, r) => sum + r.amount, 0);
           const el = document.getElementById('recordsList');
           if (recs.length === 0) {
-            el.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>本月尚無消費紀錄<br><span style="font-size:11px">新增第一筆紀錄吧</span></div>`;
+            el.innerHTML = `<div class="empty-state"><div class="empty-icon">✦</div>${currentRecordFilter !== 'all' ? '本月尚無此類消費紀錄' : '本月尚無消費紀錄'}<br><span style="font-size:11px">新增第一筆紀錄吧</span></div>`;
             return;
           }
           el.innerHTML = `
@@ -1936,7 +1970,7 @@
             const ts = typeStyles[r.type] || typeStyles.other;
             const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
             return `
-      <div class="record-item" style="border-left: 4px solid ${ts.border}; background: linear-gradient(135deg, ${ts.bg} 0%, var(--bg-card) 40%);">
+      <div class="record-item" data-record-id="${r.id}" style="border-left: 4px solid ${ts.border}; background: linear-gradient(135deg, ${ts.bg} 0%, var(--bg-card) 40%);">
         <div class="record-type-icon ${t.cls}">${t.icon}</div>
         <div class="record-info">
           <div class="record-main">
@@ -2059,14 +2093,15 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
             let tm = m - i; let ty = y;
             while (tm < 1) { tm += 12; ty--; }
             const total_m = getMonthRecords(ty, tm).reduce((s, r) => s + r.amount, 0);
-            months.push({ label: `${tm}月`, total: total_m });
+            const isCurrentMonth = ty === new Date().getFullYear() && tm === new Date().getMonth() + 1;
+            months.push({ label: `${tm}月`, total: total_m, isCurrent: isCurrentMonth });
           }
           const maxVal = Math.max(...months.map(m => m.total), 1);
           const trendHtml = `<div class="cat-list">${months.map(m => `
     <div class="bar-row">
-      <div class="bar-label">${m.label}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(m.total / maxVal * 100)}%"></div></div>
-      <div class="bar-amount">$${m.total.toLocaleString()}</div>
+      <div class="bar-label" style="${m.isCurrent ? 'color:var(--gold);font-weight:500;' : ''}">${m.isCurrent ? '<span class="current-month-dot"></span>' : ''}${m.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(m.total / maxVal * 100)}%; ${m.isCurrent ? 'background:linear-gradient(90deg,rgba(196,160,100,0.6),var(--gold));box-shadow:0 0 6px rgba(196,160,100,0.4);' : ''}"></div></div>
+      <div class="bar-amount" style="${m.isCurrent ? 'color:var(--gold);' : ''}">$${m.total.toLocaleString()}</div>
     </div>
   `).join('')}</div>`;
           document.getElementById('monthlyTrend').innerHTML = trendHtml;
@@ -2404,7 +2439,7 @@ const arrivalColor = getArrivalColor();
             document.getElementById('accessoryPagination').innerHTML = '';
           }
         }
-        function changeAccessoryPage(page) {
+        function goAccessoryPage(page) {
           document.getElementById('accessoryCurrentPage').value = page;
           renderAccessoryAllView();
         }
@@ -2735,15 +2770,16 @@ const arrivalColor = getArrivalColor();
           }
 
           r.accessoryData = {
-            product: document.getElementById('edit-acc-product').value.trim(),
-            expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
-            shop: document.getElementById('edit-acc-shop').value.trim(),
-            items: items,
-            packaging: parseFloat(document.getElementById('edit-acc-packaging').value) || 0,
-            shipping: parseFloat(document.getElementById('edit-acc-shipping').value) || 0,
-            note: document.getElementById('edit-acc-note').value.trim(),
-            isOfficial: document.getElementById('edit-acc-official').checked
-          };
+  product: document.getElementById('edit-acc-product').value.trim(),
+  expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
+  shop: document.getElementById('edit-acc-shop').value.trim(),
+  items: items,
+  packaging: parseFloat(document.getElementById('edit-acc-packaging').value) || 0,
+  shipping: parseFloat(document.getElementById('edit-acc-shipping').value) || 0,
+  note: document.getElementById('edit-acc-note').value.trim(),
+  isOfficial: document.getElementById('edit-acc-official').checked,
+  shipped: r.accessoryData?.shipped || false
+};
 
           saveData();
           closeModal('editModal');
