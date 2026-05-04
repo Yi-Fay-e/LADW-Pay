@@ -1470,23 +1470,89 @@
         <div id="accessoryPagination" style="display:flex; gap:8px; justify-content:center; margin-top:16px;"></div>
       </div>
     </div>
+    <!-- 底部署名 -->
+    <div style="text-align:center; padding: 32px 0 80px; opacity: 0.35; transition: opacity 0.3s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.35'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:6px;">
+        <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.27.75 2.53.57 3.83-.25 1.74-1.05 3.06-2.14 4.03C17.15 19.04 15 20 12 20s-5.15-.96-6.43-2.14c-1.09-.97-1.89-2.29-2.14-4.03-.18-1.3 0-2.56.57-3.83 0 0-1.82-6.42-.42-7 1.39-.58 4.64.26 6.42 2.26.65-.17 1.33-.26 2-.26Z" />
+        <path d="M7 14H2" /><path d="M7 15.5l-4.5 1.5" />
+        <path d="M17 14h5" /><path d="M17 15.5l4.5 1.5" />
+        <circle cx="9" cy="12" r="0.8" fill="var(--gold)" />
+        <circle cx="15" cy="12" r="0.8" fill="var(--gold)" />
+      </svg>
+      <span style="font-size:10px; color:var(--gold); font-family:'Noto Sans TC',sans-serif; letter-spacing:0.2em; font-weight:600;">YI.FAY.E</span>
+    </div>
+
     <!-- Toast -->
-    <!-- 匯入匯出 -->
-    <div style="position: fixed; bottom: 24px; right: 24px; display: flex; gap: 8px; z-index: 50;">
-      <button class="btn-ghost" onclick="exportData()" style="font-size: 11px; padding: 5px 12px;">⬆ 匯出</button>
-      <button class="btn-ghost" onclick="document.getElementById('importFileInput').click()"
-        style="font-size: 11px; padding: 5px 12px;">⬇ 匯入</button>
-      <button class="btn-ghost" onclick="document.getElementById('legacyImportFileInput').click()"
-        style="font-size: 11px; padding: 5px 12px; color: var(--purple-light); border-color: rgba(139,127,212,0.4);"
-        title="匯入「獵人錢包」備份檔">🔄 獵人錢包轉換</button>
-        <a href="https://yi-fay-e.github.io/LADW-Trace/" target="_blank" class="btn-ghost" style="font-size: 11px; padding: 5px 12px; text-decoration:none;">👉 抽卡紀錄</a>
+    <!-- 懸浮工具列 -->
+    <div style="position: fixed; bottom: 24px; right: 24px; display: flex; gap: 8px; z-index: 50; align-items: flex-end;">
+      <!-- 備份選單 -->
+      <div style="position: relative;">
+        <button class="btn-ghost" onclick="toggleBackupMenu()" id="backupMenuBtn" style="font-size: 11px; padding: 5px 12px;">💾 備份</button>
+        <div id="backupMenu" class="hidden" style="
+          position: absolute; bottom: 36px; right: 0;
+          background: linear-gradient(135deg, rgba(12,20,48,0.98) 0%, rgba(8,14,36,0.99) 100%);
+          border: 1px solid rgba(196,160,100,0.35);
+          border-radius: 12px;
+          padding: 8px;
+          display: flex; flex-direction: column; gap: 6px;
+          min-width: 140px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,127,212,0.08);
+          z-index: 60;
+        ">
+          <div style="font-size: 10px; color: var(--text-muted); padding: 2px 8px 4px; letter-spacing: 0.1em; border-bottom: 1px solid rgba(196,160,100,0.15); margin-bottom: 2px;">資料備份</div>
+          <button class="btn-ghost" onclick="exportData(); toggleBackupMenu();" style="font-size: 11px; padding: 5px 12px; text-align:left;">⬆ 匯出備份</button>
+          <button class="btn-ghost" onclick="document.getElementById('importFileInput').click(); toggleBackupMenu();" style="font-size: 11px; padding: 5px 12px; text-align:left;">⬇ 匯入備份</button>
+          <div style="height:1px; background: rgba(196,160,100,0.15); margin: 2px 0;"></div>
+          <button class="btn-ghost" onclick="document.getElementById('legacyImportFileInput').click(); toggleBackupMenu();" style="font-size: 11px; padding: 5px 12px; text-align:left; color: var(--purple-light); border-color: transparent;">🔄 獵人錢包轉換</button>
+        </div>
+      </div>
+      <!-- 抽卡紀錄 -->
+      <a href="https://yi-fay-e.github.io/LADW-Trace/" target="_blank" class="btn-ghost" style="font-size: 11px; padding: 5px 12px; text-decoration:none;">👉 抽卡紀錄</a>
+      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+      <input type="file" id="legacyImportFileInput" accept=".json" style="display:none" onchange="importLegacyData(event)">
+    </div>
       <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
       <input type="file" id="legacyImportFileInput" accept=".json" style="display:none"
         onchange="importLegacyData(event)">
     </div>
     <div class="toast" id="toast"></div>
 
-    <!-- User Modal -->
+    <!-- 版本更新彈窗 -->
+<div class="modal-overlay" id="versionModal" style="z-index:200;">
+  <div class="modal-box" style="max-width:320px; text-align:center; padding:32px 28px;">
+    <div style="font-family:'Noto Serif TC',serif; font-size:11px; color:var(--text-muted); letter-spacing:0.2em; margin-bottom:8px;">DEEP SPACE LEDGER</div>
+    <div style="font-family:'Noto Serif TC',serif; font-size:22px; color:var(--gold-light); margin-bottom:6px;">v1.0.0</div>
+    <div style="width:40px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 16px;"></div>
+    <div style="font-size:13px; color:var(--text-main); line-height:1.8; margin-bottom:24px;">獵人小姐你好，<br>感謝使用深空帳本！</div>
+    <button class="btn-primary" onclick="closeVersionModal()" style="width:100%;">✦ 開始使用</button>
+  </div>
+</div>
+
+<!-- 歡迎設定彈窗 -->
+<div class="modal-overlay" id="welcomeModal" style="z-index:190;">
+  <div class="modal-box" style="max-width:340px;">
+    <div style="font-family:'Noto Serif TC',serif; font-size:15px; color:var(--gold-light); margin-bottom:6px; text-align:center;">✦ 設定獵人資料</div>
+    <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:20px;">設定後可隨時點擊頭像修改</div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <div class="form-label">獵人名稱</div>
+      <input type="text" id="welcome-name" placeholder="輸入你的獵人名稱" style="width:100%;">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <div class="form-label">頭像（選填）</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div id="welcome-avatar-preview" style="width:52px; height:52px; border-radius:50%; border:1px solid var(--border-gold); background:rgba(196,160,100,0.1); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:20px;">🌙</div>
+        <button class="btn-ghost" onclick="document.getElementById('welcome-avatar-input').click()" style="font-size:12px;">上傳頭像</button>
+        <input type="file" id="welcome-avatar-input" accept="image/*" style="display:none" onchange="handleWelcomeAvatar(event)">
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-ghost" onclick="closeWelcomeModal()" style="flex:1;">跳過</button>
+      <button class="btn-primary" onclick="saveWelcomeSettings()" style="flex:2;">✦ 完成設定</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
     <div class="modal-overlay" id="userModal">
       <div class="modal-box">
         <div class="modal-title">深空獵人設定</div>
@@ -1576,6 +1642,55 @@
       };
 
       // ── Init ──
+      const CURRENT_VERSION = 'v1.0.0';
+
+      function checkVersionModal() {
+        const seen = localStorage.getItem('ds_version_seen');
+        if (seen !== CURRENT_VERSION) {
+          openModal('versionModal');
+        }
+      }
+
+      function closeVersionModal() {
+        localStorage.setItem('ds_version_seen', CURRENT_VERSION);
+        closeModal('versionModal');
+        // 版本彈窗關閉後，若是第一次使用則跳出歡迎設定
+        const isFirstTime = !localStorage.getItem('ds_user') ||
+          (!userSettings.name && !userSettings.avatar);
+        if (isFirstTime) {
+          setTimeout(() => openModal('welcomeModal'), 300);
+        }
+      }
+
+      let welcomeAvatarBase64 = '';
+
+      function handleWelcomeAvatar(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          welcomeAvatarBase64 = ev.target.result;
+          document.getElementById('welcome-avatar-preview').innerHTML =
+            `<img src="${welcomeAvatarBase64}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function saveWelcomeSettings() {
+        const name = document.getElementById('welcome-name').value.trim();
+        if (name) userSettings.name = name;
+        if (welcomeAvatarBase64) userSettings.avatar = welcomeAvatarBase64;
+        localStorage.setItem('ds_user', JSON.stringify(userSettings));
+        loadUserSettings();
+        closeWelcomeModal();
+        showToast('✦ 設定完成，歡迎來到深空帳本！');
+      }
+
+      function closeWelcomeModal() {
+        localStorage.setItem('ds_welcome_done', '1');
+        closeModal('welcomeModal');
+      }
+
       function init() {
         setupStars();
         loadUserSettings();
@@ -1583,6 +1698,7 @@
         updateMonthLabel();
         renderAll();
         checkArrivalNotifications();
+        setTimeout(checkVersionModal, 500);
       }
 
       function setTodayDate() {
@@ -3154,7 +3270,24 @@ const arrivalColor = getArrivalColor();
         }
         // ────────────────────────────────────────────────────────────
 
-        function exportData() {
+        function toggleBackupMenu() {
+        const menu = document.getElementById('backupMenu');
+        menu.classList.toggle('hidden');
+        // 點選單外面關閉
+        if (!menu.classList.contains('hidden')) {
+          setTimeout(() => {
+            document.addEventListener('click', function closeMenu(e) {
+              if (!document.getElementById('backupMenuBtn').contains(e.target) &&
+                  !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                document.removeEventListener('click', closeMenu);
+              }
+            });
+          }, 10);
+        }
+      }
+
+      function exportData() {
           const data = {
             records: records,
             user: userSettings,
