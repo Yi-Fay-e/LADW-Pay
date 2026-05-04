@@ -1304,6 +1304,13 @@
             <div class="form-label">角色</div>
             <input type="text" id="f-pact-char" placeholder="例如：秦徹、黎深、沈星回、...">
           </div>
+          <div class="form-group">
+            <div class="form-label">付款方式</div>
+            <div class="type-selector">
+              <button class="type-btn selected" data-pay="cash" onclick="selectPayMethod('pact','cash')">💵 現金</button>
+              <button class="type-btn" data-pay="points" onclick="selectPayMethod('pact','points')">💎 點數</button>
+            </div>
+          </div>
         </div>
         <!-- Package extra -->
         <div id="extra-package" class="hidden" style="margin-bottom:14px">
@@ -1738,6 +1745,8 @@
           if (document.getElementById('pact-special').checked) types.push('特別密約');
           record.pactTypes = types;
           record.pactChar = document.getElementById('f-pact-char').value.trim();
+          const payBtn = document.querySelector('#extra-pact .type-btn[data-pay].selected');
+          record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
         } else if (selectedType === 'package') {
           const payBtn = document.querySelector('#extra-package .type-btn[data-pay].selected');
           record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
@@ -1767,6 +1776,11 @@
         document.getElementById('f-other-note').value = '';
         document.getElementById('pact-normal').checked = false;
         document.getElementById('pact-special').checked = false;
+        // 重置付款方式按鈕
+        ['pact', 'monthly', 'package', 'other'].forEach(t => {
+          const btns = document.querySelectorAll(`#extra-${t} .type-btn[data-pay]`);
+          btns.forEach(b => b.classList.toggle('selected', b.dataset.pay === 'cash'));
+        });
         const arrivalField = document.getElementById('f-accessory-arrival');
         if (arrivalField) arrivalField.value = '';
       }
@@ -1801,13 +1815,19 @@
         if (r.type === 'recharge') {
           extraHtml = `<div class="form-group"><div class="form-label">備註</div><input type="text" id="edit-note" value="${r.note}" placeholder="點數備註"></div>`;
         } else if (r.type === 'pact') {
+          const selectedPay = r.payMethod === 'points' ? 'points' : 'cash';
           extraHtml = `
       <div class="form-group" style="margin-bottom:10px"><div class="form-label">密約類型</div>
       <div class="checkbox-row">
         <label class="check-item"><input type="checkbox" id="edit-pact-n" ${r.pactTypes.includes('密約') ? 'checked' : ''}><div class="check-box"></div><span class="check-label">密約</span></label>
         <label class="check-item"><input type="checkbox" id="edit-pact-s" ${r.pactTypes.includes('特別密約') ? 'checked' : ''}><div class="check-box"></div><span class="check-label">特別密約</span></label>
       </div></div>
-      <div class="form-group"><div class="form-label">角色</div><input type="text" id="edit-pact-char" value="${r.pactChar}" placeholder="角色名稱"></div>`;
+      <div class="form-group"><div class="form-label">角色</div><input type="text" id="edit-pact-char" value="${r.pactChar}" placeholder="角色名稱"></div>
+      <div class="form-group"><div class="form-label">付款方式</div>
+      <div class="type-selector">
+        <button class="type-btn ${selectedPay === 'cash' ? 'selected' : ''}" data-pay="cash" onclick="selectPayMethod('pact','cash')">💵 現金</button>
+        <button class="type-btn ${selectedPay === 'points' ? 'selected' : ''}" data-pay="points" onclick="selectPayMethod('pact','points')">💎 點數</button>
+      </div></div>`;
         } else if (r.type === 'accessory') {
           const accData = r.accessoryData || {};
           extraHtml = `
@@ -1885,6 +1905,8 @@
             if (document.getElementById('edit-pact-s')?.checked) types.push('特別密約');
             r.pactTypes = types;
             r.pactChar = (document.getElementById('edit-pact-char')?.value || '').trim();
+            const payBtn = document.querySelector('#editModalContent .type-btn[data-pay].selected');
+            r.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
           }
         saveData(); closeModal('editModal'); renderAll(); showToast('✦ 已更新紀錄');
       }
