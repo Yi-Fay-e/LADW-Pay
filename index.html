@@ -1677,6 +1677,7 @@
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
+    welcomeCropPending = true;
     const cropImage = document.getElementById('cropImage');
     cropImage.src = ev.target.result;
     openModal('cropModal');
