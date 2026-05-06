@@ -1244,7 +1244,7 @@
           </div>
           <div class="form-group">
             <div class="form-label">消費金額（NT$）</div>
-            <input type="number" id="f-amount" placeholder="0" min="0">
+            <input type="number" id="f-amount" placeholder="0" min="0" onfocus="if(this.value==='0'||this.value==='')this.value=''" onblur="if(this.value==='')this.value='0'">
           </div>
         </div>
 
@@ -1290,12 +1290,12 @@
                 <label class="check-item">
                   <input type="checkbox" id="pact-normal">
                   <div class="check-box"></div>
-                  <span class="check-label">密約</span>
+                  <span class="check-label">特別密約</span>
                 </label>
                 <label class="check-item">
                   <input type="checkbox" id="pact-special">
                   <div class="check-box"></div>
-                  <span class="check-label">特別密約</span>
+                  <span class="check-label">升級版特別密約</span>
                 </label>
               </div>
             </div>
@@ -1333,11 +1333,10 @@
           </div>
 
           <div class="form-group">
-            <div class="form-label">官方授權</div>
             <label class="check-item">
               <input type="checkbox" id="f-accessory-official">
               <div class="check-box"></div>
-              <span class="check-label">官方谷/授權販售</span>
+              <span class="check-label">官谷</span>
             </label>
           </div>
 
@@ -1511,10 +1510,6 @@
       <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
       <input type="file" id="legacyImportFileInput" accept=".json" style="display:none" onchange="importLegacyData(event)">
     </div>
-      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
-      <input type="file" id="legacyImportFileInput" accept=".json" style="display:none"
-        onchange="importLegacyData(event)">
-    </div>
     <div class="toast" id="toast"></div>
 
     <!-- 版本更新彈窗 -->
@@ -1602,6 +1597,19 @@
         </div>
       </div>
     </div>
+    <!-- Confirm Amount Modal -->
+    <div class="modal-overlay" id="confirmAmountModal">
+      <div class="modal-box" style="max-width:380px; text-align:center;">
+        <div style="font-size:26px; margin-bottom:12px;">✦</div>
+        <div class="modal-title" style="text-align:center;">金額確認</div>
+        <div id="confirmAmountBody" style="font-size:13px; color:var(--text-muted); line-height:1.9; margin-bottom:24px;"></div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button class="btn-ghost" onclick="confirmAmountCancel()">返回修改</button>
+          <button class="btn-primary" onclick="confirmAmountOk()">✦ 更新金額</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit Modal -->
     <div class="modal-overlay" id="editModal" onclick="event.stopPropagation()">
       <div class="modal-box">
@@ -1654,9 +1662,8 @@
       function closeVersionModal() {
         localStorage.setItem('ds_version_seen', CURRENT_VERSION);
         closeModal('versionModal');
-        // 版本彈窗關閉後，若是第一次使用則跳出歡迎設定
-        const isFirstTime = !localStorage.getItem('ds_user') ||
-          (!userSettings.name && !userSettings.avatar);
+        // 版本彈窗關閉後，若是第一次使用則跳出歡迎設定（只看旗標，不受名稱清除影響）
+        const isFirstTime = !localStorage.getItem('ds_welcome_done');
         if (isFirstTime) {
           setTimeout(() => openModal('welcomeModal'), 300);
         }
@@ -1721,6 +1728,18 @@
         currentMonth += d;
         if (currentMonth > 12) { currentMonth = 1; currentYear++; }
         if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+        updateMonthLabel();
+        renderAll();
+      }
+
+      function resetCurrentMonth() {
+        const now = new Date();
+        currentYear = now.getFullYear();
+        currentMonth = now.getMonth() + 1;
+        currentRecordFilter = 'all';
+        document.querySelectorAll('#recordTypeFilter .type-btn').forEach(b => {
+          b.classList.toggle('selected', b.dataset.filter === 'all');
+        });
         updateMonthLabel();
         renderAll();
       }
@@ -1857,8 +1876,8 @@
           record.note = document.getElementById('f-recharge-note').value.trim();
         } else if (selectedType === 'pact') {
           const types = [];
-          if (document.getElementById('pact-normal').checked) types.push('密約');
-          if (document.getElementById('pact-special').checked) types.push('特別密約');
+          if (document.getElementById('pact-normal').checked) types.push('特別密約');
+          if (document.getElementById('pact-special').checked) types.push('升級版特別密約');
           record.pactTypes = types;
           record.pactChar = document.getElementById('f-pact-char').value.trim();
           const payBtn = document.querySelector('#extra-pact .type-btn[data-pay].selected');
@@ -1879,6 +1898,11 @@
         saveData();
         clearForm();
         showToast('✦ 已記錄消費');
+        // 自動跳到登錄的月份
+        const recDate = new Date(record.date + 'T00:00:00');
+        currentYear = recDate.getFullYear();
+        currentMonth = recDate.getMonth() + 1;
+        updateMonthLabel();
         renderAll();
       }
       function clearForm() {
@@ -1892,6 +1916,10 @@
         document.getElementById('f-other-note').value = '';
         document.getElementById('pact-normal').checked = false;
         document.getElementById('pact-special').checked = false;
+        const productField = document.getElementById('f-accessory-product');
+        if (productField) productField.value = '';
+        const officialField = document.getElementById('f-accessory-official');
+        if (officialField) officialField.checked = false;
         // 重置付款方式按鈕
         ['pact', 'monthly', 'package', 'other'].forEach(t => {
           const btns = document.querySelectorAll(`#extra-${t} .type-btn[data-pay]`);
@@ -1935,8 +1963,8 @@
           extraHtml = `
       <div class="form-group" style="margin-bottom:10px"><div class="form-label">密約類型</div>
       <div class="checkbox-row">
-        <label class="check-item"><input type="checkbox" id="edit-pact-n" ${r.pactTypes.includes('密約') ? 'checked' : ''}><div class="check-box"></div><span class="check-label">密約</span></label>
-        <label class="check-item"><input type="checkbox" id="edit-pact-s" ${r.pactTypes.includes('特別密約') ? 'checked' : ''}><div class="check-box"></div><span class="check-label">特別密約</span></label>
+        <label class="check-item"><input type="checkbox" id="edit-pact-n" ${r.pactTypes.includes('特別密約') ? 'checked' : ''}><div class="check-box"></div><span class="check-label">特別密約</span></label>
+        <label class="check-item"><input type="checkbox" id="edit-pact-s" ${r.pactTypes.includes('升級版特別密約') ? 'checked' : ''}><div class="check-box"></div><span class="check-label">升級版特別密約</span></label>
       </div></div>
       <div class="form-group"><div class="form-label">角色</div><input type="text" id="edit-pact-char" value="${r.pactChar}" placeholder="角色名稱"></div>
       <div class="form-group"><div class="form-label">付款方式</div>
@@ -1952,11 +1980,10 @@
         <input type="text" id="edit-accessory-product" value="${accData.product || ''}" placeholder="商品名稱">
       </div>
       <div class="form-group">
-        <div class="form-label">官方授權</div>
         <label class="check-item">
           <input type="checkbox" id="edit-accessory-official" ${accData.isOfficial ? 'checked' : ''}>
           <div class="check-box"></div>
-          <span class="check-label">官方谷/授權販售</span>
+          <span class="check-label">官谷</span>
         </label>
       </div>`;
         } else if (r.type === 'package') {
@@ -2017,8 +2044,8 @@
             r.note = (document.getElementById('edit-note')?.value || '').trim();
           } else if (r.type === 'pact') {
             const types = [];
-            if (document.getElementById('edit-pact-n')?.checked) types.push('密約');
-            if (document.getElementById('edit-pact-s')?.checked) types.push('特別密約');
+            if (document.getElementById('edit-pact-n')?.checked) types.push('特別密約');
+            if (document.getElementById('edit-pact-s')?.checked) types.push('升級版特別密約');
             r.pactTypes = types;
             r.pactChar = (document.getElementById('edit-pact-char')?.value || '').trim();
             const payBtn = document.querySelector('#editModalContent .type-btn[data-pay].selected');
@@ -2198,7 +2225,7 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
           <div style="font-size:13px; color:var(--gold-light);">周邊 NT$${recs.filter(r => r.type === 'accessory').reduce((s, r) => s + r.amount, 0).toLocaleString()}</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-          <div style="font-size:13px; color:var(--purple-light);">深空 NT$${recs.filter(r => r.type !== 'accessory').reduce((s, r) => s + r.amount, 0).toLocaleString()}</div>
+          <div style="font-size:13px; color:var(--gold-light);">深空 NT$${recs.filter(r => r.type !== 'accessory').reduce((s, r) => s + r.amount, 0).toLocaleString()}</div>
         </div>
       </div>
     </div>
@@ -2263,10 +2290,10 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
           document.getElementById('analysisYearLabel').textContent = `${analysisYearValue}`;
           const monthTotals = Array.from({ length: 12 }, (_, i) => ({
             m: i + 1,
-            total: getMonthRecords(analysisYearValue, i + 1).reduce((s, r) => s + r.amount, 0)
+            total: getMonthRecords(analysisYearValue, i + 1).filter(r => r.payMethod !== 'points').reduce((s, r) => s + r.amount, 0)
           }));
           const maxVal = Math.max(...monthTotals.map(m => m.total), 1);
-          const yearTotal = monthTotals.reduce((s, m) => s + m.total, 0);
+          const yearTotal = records.filter(r => new Date(r.date).getFullYear() === analysisYearValue && r.payMethod !== 'points').reduce((s, r) => s + r.amount, 0);
 
           // 年度光暈長條
           document.getElementById('yearMonthGrid').innerHTML = monthTotals.map(({ m, total }) => {
@@ -2305,7 +2332,8 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
     <div style="background: linear-gradient(135deg, rgba(139,127,212,0.2), rgba(74,143,196,0.15)); border: 1.5px solid var(--border-gold-bright); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden;">
       <div style="position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,var(--gold-light),transparent);"></div>
       <div style="font-size:12px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:8px;">${analysisYearValue} 年度總計</div>
-      <div style="font-family:'Noto Serif TC',serif; font-size:32px; color:var(--purple-light); font-weight:500; letter-spacing:0.05em; margin-bottom:12px;">NT$${yearTotal.toLocaleString()}</div>
+      <div style="font-family:'Noto Serif TC',serif; font-size:32px; color:var(--purple-light); font-weight:500; letter-spacing:0.05em; margin-bottom:4px;">NT$${yearTotal.toLocaleString()}</div>
+<div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">（現金支出合計，不含點數）</div>
       <div style="display:flex; justify-content:center; gap:24px; font-size:12px; color:var(--text-muted);">
         <div>💵 現金 <span style="color:#7ec8e3;">NT$${yearCash.toLocaleString()}</span></div>
         <div>💎 點數 <span style="color:#6495ed;">${yearPoints.toLocaleString()}點</span></div>
@@ -2316,7 +2344,7 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
       ${Object.entries(TYPE_MAP).map(([k, v]) => {
             const isPackage = k === 'package';
             const isMonthly = k === 'monthly';
-            const hasExpandDetail = isPackage || isMonthly;
+            const hasExpandDetail = k === 'package' || k === 'monthly' || k === 'pact' || k === 'other';
             const detailCash = hasExpandDetail ? records.filter(r => new Date(r.date).getFullYear() === analysisYearValue && r.type === k && r.payMethod !== 'points').reduce((s, r) => s + r.amount, 0) : 0;
             const detailPoints = hasExpandDetail ? records.filter(r => new Date(r.date).getFullYear() === analysisYearValue && r.type === k && r.payMethod === 'points').reduce((s, r) => s + r.amount, 0) : 0;
             const hasDetail = hasExpandDetail && detailPoints > 0;
@@ -2480,12 +2508,12 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
           const pageRecs = allRecs.slice(startIdx, startIdx + pageSize);
 
           const monthColors = [
-            { border: '#8b7fd4', bg: 'rgba(139,127,212,0.06)' },
-            { border: '#4a8fc4', bg: 'rgba(74,143,196,0.06)' },
-            { border: '#70b490', bg: 'rgba(112,180,144,0.06)' },
-            { border: '#c4a064', bg: 'rgba(196,160,100,0.06)' },
-            { border: '#c47070', bg: 'rgba(196,112,112,0.06)' },
-            { border: '#9990bb', bg: 'rgba(153,144,187,0.06)' },
+            { border: '#8b7fd4', bg: 'rgba(139,127,212,0.15)' },
+            { border: '#4a8fc4', bg: 'rgba(74,143,196,0.15)' },
+            { border: '#70b490', bg: 'rgba(112,180,144,0.15)' },
+            { border: '#c4a064', bg: 'rgba(196,160,100,0.15)' },
+            { border: '#c47070', bg: 'rgba(196,112,112,0.15)' },
+            { border: '#9990bb', bg: 'rgba(153,144,187,0.15)' },
           ];
           const monthColorMap = {};
           let colorIdx = 0;
@@ -2516,7 +2544,11 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
             );
 
             const itemsHtml = (accData.items || []).map(item =>
-              `<div style="margin-bottom: 4px;">• ${item.name} × ${item.qty}　單價 NT$${item.price.toLocaleString()}</div>`
+              `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; color:var(--text-main);">
+                <span style="flex:2; text-align:left;">• ${item.name}</span>
+                <span style="flex:1; text-align:center; color:var(--text-muted);">× ${item.qty}</span>
+                <span style="flex:1; text-align:right; color:var(--gold-light);">NT$${(item.price * item.qty).toLocaleString()}</span>
+              </div>`
             ).join('');
 
             const isShipped = accData.shipped === true;
@@ -2533,13 +2565,13 @@ ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba
 }
 const arrivalColor = getArrivalColor();
             const cardBorderColor = isShipped ? '#70b490' : mc.border;
-            const cardBg = isShipped ? 'rgba(112,180,144,0.06)' : mc.bg;
+            const cardBg = isShipped ? 'rgba(112,180,144,0.15)' : mc.bg;
 
             return `
       ${isFirstOfMonth ? `<div style="font-family: 'Noto Serif TC', serif; font-size: 13px; color: var(--gold); letter-spacing: 0.1em; margin: 16px 0 8px; padding-left: 4px;">　${monthKey}</div>` : ''}
       <div style="border: 1px solid var(--border-gold); border-left: 4px solid ${cardBorderColor}; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; font-size: 13px; background: linear-gradient(135deg, ${cardBg} 0%, var(--bg-card) 40%);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-          <div style="color: ${isShipped ? 'var(--text-muted)' : 'var(--gold-light)'}; font-weight: 500; font-size: 14px;">${product}</div>
+          <div style="color: ${isShipped ? 'var(--text-muted)' : 'var(--text-main)'}; font-weight: 400; font-size: 14px;">${product}</div>
           <div style="display:flex; gap:6px; align-items:center;">
             ${isShipped ? '<span style="background: rgba(112,180,144,0.2); color: #70b490; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✅ 已出貨</span>' : ''}
             ${accData.isOfficial ? '<span style="background: rgba(255,193,7,0.2); color: #FFD700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✓ 官谷</span>' : ''}
@@ -2558,13 +2590,24 @@ const arrivalColor = getArrivalColor();
             <button class="btn-danger" onclick="deleteRecord('${r.id}')" style="font-size: 11px; padding: 4px 8px;">刪除</button>
           </div>
         </div>
-        <div id="all-detail-${r.id}" class="hidden" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-gold); font-size: 12px; color: var(--text-muted);">
-          ${itemsHtml ? `<div style="margin-bottom: 8px;"><div style="margin-bottom: 4px;">商品內容：</div><div style="margin-left: 12px;">${itemsHtml}</div></div>` : ''}
-          <div style="margin-bottom: 4px;">賣場：${accData.shop || '-'}</div>
-          <div style="margin-bottom: 4px;">包裝費/手續費：NT$${(accData.packaging || 0).toLocaleString()}</div>
-          <div style="margin-bottom: 4px;">運費：NT$${(accData.shipping || 0).toLocaleString()}</div>
-          ${accData.note ? `<div>備註：${accData.note}</div>` : ''}
-        </div>
+        <div id="all-detail-${r.id}" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border-gold); font-size:12px;">
+  ${itemsHtml ? `
+    <div style="margin-bottom:6px; color:var(--text-muted); font-size:11px; letter-spacing:1px;">商品內容</div>
+    <div style="margin-bottom:12px;">${itemsHtml}</div>
+  ` : ''}
+  <div style="border-top:1px solid rgba(196,160,100,0.1); padding-top:10px; margin-bottom:10px;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--text-main);">
+      <span>· 包裝費/手續費</span><span style="color:var(--gold-light);">NT$${(accData.packaging||0).toLocaleString()}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; color:var(--text-main);">
+      <span>· 運費</span><span style="color:var(--gold-light);">NT$${(accData.shipping||0).toLocaleString()}</span>
+    </div>
+  </div>
+  <div style="border-top:1px solid rgba(196,160,100,0.1); padding-top:10px; color:var(--text-muted); font-size:11px; line-height:1.8; text-align:left;">
+    ${accData.shop ? `<div>賣場：${accData.shop}</div>` : ''}
+    ${accData.note ? `<div style="font-style:italic;">備註：${accData.note}</div>` : ''}
+  </div>
+</div>
       </div>
     `;
           }).join('');
@@ -2599,7 +2642,7 @@ const arrivalColor = getArrivalColor();
       </div>
       <div class="form-group">
         <div class="form-label">下單金額（NT$）</div>
-        <input type="number" id="edit-amount" value="${r.amount}" min="0">
+        <input type="number" id="edit-amount" value="${r.amount}" min="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
       </div>
     </div>
 
@@ -2622,12 +2665,12 @@ const arrivalColor = getArrivalColor();
 
     <div class="form-group" style="margin-bottom: 14px;">
       <div class="form-label">包裝費/手續費</div>
-      <input type="number" id="edit-acc-packaging" value="${accData.packaging || 0}" min="0" step="0.01">
+      <input type="text" inputmode="numeric" id="edit-acc-packaging" value="${accData.packaging || 0}" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()">
     </div>
 
     <div class="form-group" style="margin-bottom: 14px;">
       <div class="form-label">運費</div>
-      <input type="number" id="edit-acc-shipping" value="${accData.shipping || 0}" min="0" step="0.01">
+      <input type="text" inputmode="numeric" id="edit-acc-shipping" value="${accData.shipping || 0}" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()">
     </div>
 
     <div class="form-group" style="margin-bottom: 14px;">
@@ -2636,11 +2679,10 @@ const arrivalColor = getArrivalColor();
     </div>
 
     <div class="form-group" style="margin-bottom: 14px;">
-      <div class="form-label">官方授權</div>
       <label class="check-item">
         <input type="checkbox" id="edit-acc-official" ${accData.isOfficial ? 'checked' : ''}>
         <div class="check-box"></div>
-        <span class="check-label">官方谷/授權販售</span>
+        <span class="check-label">官谷</span>
       </label>
     </div>
 
@@ -2739,7 +2781,7 @@ const arrivalColor = getArrivalColor();
     <div id="items-list"></div>
     <button type="button" class="btn-ghost" onclick="addNewAccessoryItem()" style="width: 100%; padding: 8px; margin-bottom: 12px;">+ 新增商品</button>
     <div style="padding: 10px; background: rgba(196,160,100,0.1); border-radius: 8px; border: 1px solid var(--border-gold); text-align: center;">
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">商品小計合計</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">商品＋包裝＋運費合計</div>
       <div id="items-total-display" style="font-size: 16px; color: var(--gold-light); font-weight: 600;">NT$0</div>
     </div>
   `;
@@ -2756,7 +2798,7 @@ const arrivalColor = getArrivalColor();
         </div>
         <div style="flex: 1;">
           <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 3px;">單價(NT$)</div>
-          <input type="number" class="item-price-${idx}" value="${item.price || 0}" min="0" step="0.01" oninput="updateItemsTotal()" style="width:100%; padding: 6px; border: 1px solid var(--border-gold); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 12px;">
+          <input type="text" inputmode="numeric" class="item-price-${idx}" value="${item.price || 0}" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()" style="width:100%; padding: 6px; border: 1px solid var(--border-gold); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 12px;">
         </div>
         <div style="flex: 1;">
           <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 3px;">數量</div>
@@ -2784,7 +2826,7 @@ const arrivalColor = getArrivalColor();
         </div>
         <div style="flex: 1;">
           <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 3px;">單價(NT$)</div>
-          <input type="number" class="item-price-${newIdx}" value="0" min="0" step="0.01" oninput="updateItemsTotal()" style="width:100%; padding: 6px; border: 1px solid var(--border-gold); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 12px;">
+          <input type="text" inputmode="numeric" class="item-price-${newIdx}" value="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()" style="width:100%; padding: 6px; border: 1px solid var(--border-gold); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 12px;">
         </div>
         <div style="flex: 1;">
           <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 3px;">數量</div>
@@ -2810,7 +2852,7 @@ const arrivalColor = getArrivalColor();
 
         function updateItemsTotal() {
           const itemsList = document.getElementById('items-list');
-          const rows = itemsList.querySelectorAll('.item-row');
+          const rows = itemsList ? itemsList.querySelectorAll('.item-row') : [];
           let total = 0;
 
           rows.forEach((row, idx) => {
@@ -2822,15 +2864,18 @@ const arrivalColor = getArrivalColor();
               const price = parseFloat(priceInput.value) || 0;
               const qty = parseInt(qtyInput.value) || 1;
               const subtotal = price * qty;
-
               subtotalSpan.textContent = subtotal.toLocaleString();
               total += subtotal;
             }
           });
 
+          const packaging = parseFloat(document.getElementById('edit-acc-packaging')?.value) || 0;
+          const shipping = parseFloat(document.getElementById('edit-acc-shipping')?.value) || 0;
+          const grandTotal = total + packaging + shipping;
+
           const totalDisplay = document.getElementById('items-total-display');
           if (totalDisplay) {
-            totalDisplay.textContent = `NT$${total.toLocaleString()}`;
+            totalDisplay.textContent = `NT$${grandTotal.toLocaleString()}`;
           }
         }
         function updateAccessoryItemsDisplay() {
@@ -2861,70 +2906,72 @@ const arrivalColor = getArrivalColor();
           if (!r) return;
 
           r.date = document.getElementById('edit-date').value;
-          // 計算商品小計
+
+          // 收集商品內容
           const itemsList = document.getElementById('items-list');
+          const items = [];
           let itemsTotal = 0;
           if (itemsList) {
             itemsList.querySelectorAll('.item-row').forEach((row, idx) => {
-              const price = parseFloat(row.querySelector(`input.item-price-${idx}`)?.value) || 0;
-              const qty = parseInt(row.querySelector(`input.item-qty-${idx}`)?.value) || 1;
-              itemsTotal += price * qty;
+              const nameInput = row.querySelector(`input.item-name-${idx}`);
+              const priceInput = row.querySelector(`input.item-price-${idx}`);
+              const qtyInput = row.querySelector(`input.item-qty-${idx}`);
+              if (nameInput && priceInput && qtyInput) {
+                const name = nameInput.value.trim();
+                const price = parseFloat(priceInput.value) || 0;
+                const qty = parseInt(qtyInput.value) || 1;
+                if (name) items.push({ name, price, qty });
+                itemsTotal += price * qty;
+              }
             });
           }
+
           const packaging = parseFloat(document.getElementById('edit-acc-packaging').value) || 0;
           const shipping = parseFloat(document.getElementById('edit-acc-shipping').value) || 0;
           const newTotal = itemsTotal + packaging + shipping;
           const originalAmount = r.amount;
 
           if (newTotal > 0 && newTotal !== originalAmount) {
-            if (!confirm(`商品加總金額為 NT$${newTotal.toLocaleString()}，與原記帳金額 NT$${originalAmount.toLocaleString()} 不同，是否更新總金額？`)) {
-              r.amount = originalAmount;
-            } else {
-              r.amount = newTotal;
-            }
+            window._confirmAmountCallback = (useNew) => {
+              r.amount = useNew ? newTotal : originalAmount;
+              _finishSaveAccessoryEdit(r, items, packaging, shipping);
+            };
+            document.getElementById('confirmAmountBody').innerHTML =
+              `商品加總金額為 <span style="color:var(--gold-light); font-weight:600;">NT$${newTotal.toLocaleString()}</span><br>與原記帳金額 <span style="color:var(--text-main);">NT$${originalAmount.toLocaleString()}</span> 不同<br><br>是否將總金額更新為 NT$${newTotal.toLocaleString()}？`;
+            openModal('confirmAmountModal');
           } else {
-            r.amount = parseFloat(document.getElementById('edit-amount').value) || r.amount;
+            r.amount = newTotal > 0 ? newTotal : (parseFloat(document.getElementById('edit-amount').value) || r.amount);
+            _finishSaveAccessoryEdit(r, items, packaging, shipping);
           }
+        }
 
-          // 收集商品內容
-          const items = [];
-
-          if (itemsList) {
-            const rows = itemsList.querySelectorAll('.item-row');
-            rows.forEach((row, idx) => {
-              const nameInput = row.querySelector(`input.item-name-${idx}`);
-              const priceInput = row.querySelector(`input.item-price-${idx}`);
-              const qtyInput = row.querySelector(`input.item-qty-${idx}`);
-
-              if (nameInput && priceInput && qtyInput) {
-                const name = nameInput.value.trim();
-                const price = parseFloat(priceInput.value) || 0;
-                const qty = parseInt(qtyInput.value) || 1;
-
-                if (name) {
-                  items.push({ name, price, qty });
-                }
-              }
-            });
-          }
-
+        function _finishSaveAccessoryEdit(r, items, packaging, shipping) {
           r.accessoryData = {
-  product: document.getElementById('edit-acc-product').value.trim(),
-  expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
-  shop: document.getElementById('edit-acc-shop').value.trim(),
-  items: items,
-  packaging: parseFloat(document.getElementById('edit-acc-packaging').value) || 0,
-  shipping: parseFloat(document.getElementById('edit-acc-shipping').value) || 0,
-  note: document.getElementById('edit-acc-note').value.trim(),
-  isOfficial: document.getElementById('edit-acc-official').checked,
-  shipped: r.accessoryData?.shipped || false
-};
-
+            product: document.getElementById('edit-acc-product').value.trim(),
+            expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
+            shop: document.getElementById('edit-acc-shop').value.trim(),
+            items: items,
+            packaging: packaging,
+            shipping: shipping,
+            note: document.getElementById('edit-acc-note').value.trim(),
+            isOfficial: document.getElementById('edit-acc-official').checked,
+            shipped: r.accessoryData?.shipped || false
+          };
           saveData();
           closeModal('editModal');
           renderAccessoryTab();
           renderAll();
           showToast('✦ 已更新周邊紀錄');
+        }
+
+        function confirmAmountOk() {
+          closeModal('confirmAmountModal');
+          if (window._confirmAmountCallback) window._confirmAmountCallback(true);
+        }
+
+        function confirmAmountCancel() {
+          closeModal('confirmAmountModal');
+          if (window._confirmAmountCallback) window._confirmAmountCallback(false);
         }
         function openAccessoryAdd() {
           editingId = null;
@@ -2939,7 +2986,7 @@ const arrivalColor = getArrivalColor();
       </div>
       <div class="form-group">
         <div class="form-label">下單金額（NT$）</div>
-        <input type="number" id="edit-amount" value="0" min="0">
+        <input type="number" id="edit-amount" value="0" min="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
       </div>
     </div>
     <div class="form-group" style="margin-bottom: 14px;">
@@ -2957,22 +3004,21 @@ const arrivalColor = getArrivalColor();
     <div id="accessory-items-section" style="margin-bottom: 14px;"></div>
     <div class="form-group" style="margin-bottom: 14px;">
       <div class="form-label">包裝費/手續費</div>
-      <input type="number" id="edit-acc-packaging" value="0" min="0" step="0.01">
+      <input type="text" inputmode="numeric" id="edit-acc-packaging" value="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()">
     </div>
     <div class="form-group" style="margin-bottom: 14px;">
       <div class="form-label">運費</div>
-      <input type="number" id="edit-acc-shipping" value="0" min="0" step="0.01">
+      <input type="text" inputmode="numeric" id="edit-acc-shipping" value="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()">
     </div>
     <div class="form-group" style="margin-bottom: 14px;">
       <div class="form-label">備註</div>
       <textarea id="edit-acc-note" placeholder="例如：預購、黃色款" style="min-height: 60px;"></textarea>
     </div>
     <div class="form-group" style="margin-bottom: 14px;">
-      <div class="form-label">官方授權</div>
       <label class="check-item">
         <input type="checkbox" id="edit-acc-official">
         <div class="check-box"></div>
-        <span class="check-label">官方谷/授權販售</span>
+        <span class="check-label">官谷</span>
       </label>
     </div>
     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
@@ -3124,7 +3170,7 @@ const arrivalColor = getArrivalColor();
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
         document.querySelectorAll('.modal-overlay').forEach(el => {
-          if (el.id === 'editModal') return;
+          if (el.id === 'editModal' || el.id === 'confirmAmountModal') return;
           el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
         });
 
