@@ -1673,43 +1673,44 @@
       let welcomeCropPending = false;
 
       function handleWelcomeAvatar(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    welcomeCropPending = true;
-    const cropImage = document.getElementById('cropImage');
-    cropImage.src = ev.target.result;
-    openModal('cropModal');
-    setTimeout(() => {
-      if (cropper) cropper.destroy();
-      cropper = new Cropper(cropImage, {
-        aspectRatio: 1,
-        viewMode: 1,
-        autoCropArea: 0.8,
-      });
-    }, 300);
-  };
-  reader.readAsDataURL(file);
-}
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          welcomeCropPending = true;
+          const cropImage = document.getElementById('cropImage');
+          cropImage.src = ev.target.result;
+          document.getElementById('cropModal').classList.add('open');
+          setTimeout(() => {
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(cropImage, {
+              aspectRatio: 1,
+              viewMode: 1,
+              autoCropArea: 0.8,
+            });
+          }, 300);
+        };
+        reader.readAsDataURL(file);
+      }
 
       function saveWelcomeSettings() {
-  const name = document.getElementById('welcome-name').value.trim();
-  if (name) userSettings.name = name;
-  if (welcomeAvatarBase64) {
-    userSettings.avatar = welcomeAvatarBase64;
-    setAvatar(welcomeAvatarBase64);
-  }
-  localStorage.setItem('ds_user', JSON.stringify(userSettings));
-  localStorage.setItem('ds_welcome_done', '1');
-  loadUserSettings();
-  closeModal('welcomeModal');
-  showToast('✦ 設定完成，歡迎來到深空帳本！');
-}
+        const name = document.getElementById('welcome-name').value.trim();
+        if (name) userSettings.name = name;
+        if (welcomeAvatarBase64) {
+          userSettings.avatar = welcomeAvatarBase64;
+          const avatarRing = document.getElementById('avatarRing');
+          if (avatarRing) avatarRing.innerHTML = `<img src="${welcomeAvatarBase64}">`;
+        }
+        localStorage.setItem('ds_user', JSON.stringify(userSettings));
+        localStorage.setItem('ds_welcome_done', '1');
+        loadUserSettings();
+        document.getElementById('welcomeModal').classList.remove('open');
+        showToast('✦ 設定完成，歡迎來到深空帳本！');
+      }
 
       function closeWelcomeModal() {
         localStorage.setItem('ds_welcome_done', '1');
-        closeModal('welcomeModal');
+        document.getElementById('welcomeModal').classList.remove('open');
       }
 
       function init() {
