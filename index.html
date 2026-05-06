@@ -1670,28 +1670,41 @@
       }
 
       let welcomeAvatarBase64 = '';
+      let welcomeCropPending = false;
 
       function handleWelcomeAvatar(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-          welcomeAvatarBase64 = ev.target.result;
-          document.getElementById('welcome-avatar-preview').innerHTML =
-            `<img src="${welcomeAvatarBase64}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;
-        };
-        reader.readAsDataURL(file);
-      }
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const cropImage = document.getElementById('cropImage');
+    cropImage.src = ev.target.result;
+    openModal('cropModal');
+    setTimeout(() => {
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(cropImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 0.8,
+      });
+    }, 300);
+  };
+  reader.readAsDataURL(file);
+}
 
       function saveWelcomeSettings() {
-        const name = document.getElementById('welcome-name').value.trim();
-        if (name) userSettings.name = name;
-        if (welcomeAvatarBase64) userSettings.avatar = welcomeAvatarBase64;
-        localStorage.setItem('ds_user', JSON.stringify(userSettings));
-        loadUserSettings();
-        closeWelcomeModal();
-        showToast('✦ 設定完成，歡迎來到深空帳本！');
-      }
+  const name = document.getElementById('welcome-name').value.trim();
+  if (name) userSettings.name = name;
+  if (welcomeAvatarBase64) {
+    userSettings.avatar = welcomeAvatarBase64;
+    setAvatar(welcomeAvatarBase64);
+  }
+  localStorage.setItem('ds_user', JSON.stringify(userSettings));
+  localStorage.setItem('ds_welcome_done', '1');
+  loadUserSettings();
+  closeModal('welcomeModal');
+  showToast('✦ 設定完成，歡迎來到深空帳本！');
+}
 
       function closeWelcomeModal() {
         localStorage.setItem('ds_welcome_done', '1');
@@ -3158,6 +3171,13 @@ const arrivalColor = getArrivalColor();
           setAvatar(src);
           document.getElementById('avatarLarge').innerHTML = `<img src="${src}">`;
           if (cropper) { cropper.destroy(); cropper = null; }
+          if (welcomeCropPending) {
+  welcomeAvatarBase64 = src;
+  document.getElementById('welcome-avatar-preview').innerHTML =
+    `<img src="${src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;
+  welcomeCropPending = false;
+  return;
+}
           closeModal('cropModal');
         }
 
