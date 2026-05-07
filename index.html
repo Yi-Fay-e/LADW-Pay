@@ -1332,14 +1332,18 @@
             <input type="text" id="f-accessory-product" placeholder="例如：徽章/明日無處可逃系列">
           </div>
 
-          <div class="form-group">
+          <div style="display:inline-flex; gap:16px; align-items:center; margin-bottom:8px;">
             <label class="check-item">
               <input type="checkbox" id="f-accessory-official">
               <div class="check-box"></div>
               <span class="check-label">官谷</span>
             </label>
+            <label class="check-item">
+              <input type="checkbox" id="f-accessory-preorder">
+              <div class="check-box"></div>
+              <span class="check-label">預購</span>
+            </label>
           </div>
-
           <div class="form-group">
             <div class="form-label">預計出貨日 <span style="color:var(--text-muted); font-size:11px;">（選填）</span></div>
             <input type="date" id="f-accessory-arrival">
@@ -1882,6 +1886,7 @@
           record.accessoryData = {
             product,
             isOfficial,
+            preorder: document.getElementById('f-accessory-preorder')?.checked || false,
             items: [],
             shop: '',
             expectedArrivalDate: document.getElementById('f-accessory-arrival').value || '',
@@ -1938,6 +1943,8 @@
         if (productField) productField.value = '';
         const officialField = document.getElementById('f-accessory-official');
         if (officialField) officialField.checked = false;
+        const preorderField = document.getElementById('f-accessory-preorder');
+        if (preorderField) preorderField.checked = false;
         // 重置付款方式按鈕
         ['pact', 'monthly', 'package', 'other'].forEach(t => {
           const btns = document.querySelectorAll(`#extra-${t} .type-btn[data-pay]`);
@@ -1997,13 +2004,18 @@
         <div class="form-label">商品名稱</div>
         <input type="text" id="edit-accessory-product" value="${accData.product || ''}" placeholder="商品名稱">
       </div>
-      <div class="form-group">
-        <label class="check-item">
-          <input type="checkbox" id="edit-accessory-official" ${accData.isOfficial ? 'checked' : ''}>
-          <div class="check-box"></div>
-          <span class="check-label">官谷</span>
-        </label>
-      </div>`;
+        <div style="display:inline-flex; gap:16px; align-items:center; margin-bottom:8px;">
+          <label class="check-item">
+            <input type="checkbox" id="edit-accessory-official" ${accData.isOfficial ? 'checked' : ''}>
+            <div class="check-box"></div>
+            <span class="check-label">官谷</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="edit-acc-preorder" ${accData.preorder ? 'checked' : ''}>
+            <div class="check-box"></div>
+            <span class="check-label">預購</span>
+          </label>
+        </div>`;
         } else if (r.type === 'package') {
           const selectedPay = r.payMethod === 'points' ? 'points' : 'cash';
           extraHtml = `
@@ -2054,21 +2066,25 @@
         if (!r) return;
         r.date = document.getElementById('edit-date').value;
         r.amount = parseFloat(document.getElementById('edit-amount').value) || r.amount;
-        if (r.type === 'monthly' || r.type === 'package') {
+        if (r.type === 'accessory') {
+          if (!r.accessoryData) r.accessoryData = {};
+          r.accessoryData.product = (document.getElementById('edit-accessory-product')?.value || '').trim();
+          r.accessoryData.isOfficial = document.getElementById('edit-accessory-official')?.checked || false;
+          r.accessoryData.preorder = document.getElementById('edit-acc-preorder')?.checked || false;
+        } else if (r.type === 'monthly' || r.type === 'package') {
           const payBtn = document.querySelector('#editModalContent .type-btn[data-pay].selected');
           r.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
-        } else
-          if (r.type === 'recharge' || r.type === 'other') {
-            r.note = (document.getElementById('edit-note')?.value || '').trim();
-          } else if (r.type === 'pact') {
-            const types = [];
-            if (document.getElementById('edit-pact-n')?.checked) types.push('特別密約');
-            if (document.getElementById('edit-pact-s')?.checked) types.push('升級版特別密約');
-            r.pactTypes = types;
-            r.pactChar = (document.getElementById('edit-pact-char')?.value || '').trim();
-            const payBtn = document.querySelector('#editModalContent .type-btn[data-pay].selected');
-            r.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
-          }
+        } else if (r.type === 'recharge' || r.type === 'other') {
+          r.note = (document.getElementById('edit-note')?.value || '').trim();
+        } else if (r.type === 'pact') {
+          const types = [];
+          if (document.getElementById('edit-pact-n')?.checked) types.push('特別密約');
+          if (document.getElementById('edit-pact-s')?.checked) types.push('升級版特別密約');
+          r.pactTypes = types;
+          r.pactChar = (document.getElementById('edit-pact-char')?.value || '').trim();
+          const payBtn = document.querySelector('#editModalContent .type-btn[data-pay].selected');
+          r.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
+        }
         saveData(); closeModal('editModal'); renderAll(); showToast('✦ 已更新紀錄');
       }
 
@@ -2160,6 +2176,7 @@
           <div class="record-main">
             <span class="record-type-name">${displayName}</span>
             ${badge ? `<span class="record-badge">${badge}</span>` : ''}
+            ${(r.type === 'accessory' && r.accessoryData?.preorder) ? `<span class="record-badge" style="background:rgba(74,143,196,0.2);color:#4a8fc4;border-color:rgba(74,143,196,0.4);">預</span>` : ''}
 ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba(100,149,237,0.2); color: #6495ed; border-color: rgba(100,149,237,0.4);">💎 點數</span>` : ''}
             <span class="record-date">${dateStr}</span>
           </div>
@@ -2593,6 +2610,7 @@ const arrivalColor = getArrivalColor();
           <div style="display:flex; gap:6px; align-items:center;">
             ${isShipped ? '<span style="background: rgba(112,180,144,0.2); color: #70b490; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✅ 已出貨</span>' : ''}
             ${accData.isOfficial ? '<span style="background: rgba(255,193,7,0.2); color: #FFD700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✓ 官谷</span>' : ''}
+            ${accData.preorder ? '<span style="background:rgba(74,143,196,0.2);color:#4a8fc4;padding:2px 8px;border-radius:4px;font-size:11px;">預</span>' : ''}
           </div>
         </div>
         <div style="display: flex; gap: 16px; margin-bottom: 10px;">
@@ -2696,11 +2714,16 @@ const arrivalColor = getArrivalColor();
       <textarea id="edit-acc-note" placeholder="例如：預購、黃色款" style="min-height: 60px;">${accData.note || ''}</textarea>
     </div>
 
-    <div class="form-group" style="margin-bottom: 14px;">
+    <div style="display:inline-flex; gap:16px; align-items:center; margin-bottom:14px;">
       <label class="check-item">
         <input type="checkbox" id="edit-acc-official" ${accData.isOfficial ? 'checked' : ''}>
         <div class="check-box"></div>
         <span class="check-label">官谷</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" id="edit-acc-preorder" ${accData.preorder ? 'checked' : ''}>
+        <div class="check-box"></div>
+        <span class="check-label">預購</span>
       </label>
     </div>
 
@@ -2973,6 +2996,7 @@ const arrivalColor = getArrivalColor();
             shipping: shipping,
             note: document.getElementById('edit-acc-note').value.trim(),
             isOfficial: document.getElementById('edit-acc-official').checked,
+            preorder: document.getElementById('edit-acc-preorder')?.checked || false,
             shipped: r.accessoryData?.shipped || false
           };
           saveData();
@@ -3032,11 +3056,16 @@ const arrivalColor = getArrivalColor();
       <div class="form-label">備註</div>
       <textarea id="edit-acc-note" placeholder="例如：預購、黃色款" style="min-height: 60px;"></textarea>
     </div>
-    <div class="form-group" style="margin-bottom: 14px;">
+    <div style="display:inline-flex; gap:16px; align-items:center; margin-bottom:14px;">
       <label class="check-item">
         <input type="checkbox" id="edit-acc-official">
         <div class="check-box"></div>
         <span class="check-label">官谷</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" id="edit-acc-preorder">
+        <div class="check-box"></div>
+        <span class="check-label">預購</span>
       </label>
     </div>
     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
@@ -3088,15 +3117,16 @@ const arrivalColor = getArrivalColor();
             amount: finalAmount,
             note: '',
             accessoryData: {
-              product: document.getElementById('edit-acc-product').value.trim(),
-              expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
-              shop: document.getElementById('edit-acc-shop').value.trim(),
-              items: items,
-              packaging: packaging,
-              shipping: shipping,
-              note: document.getElementById('edit-acc-note').value.trim(),
-              isOfficial: document.getElementById('edit-acc-official').checked
-            }
+           product: document.getElementById('edit-acc-product').value.trim(),
+           expectedArrivalDate: document.getElementById('edit-acc-arrival').value,
+           shop: document.getElementById('edit-acc-shop').value.trim(),
+           items: items,
+           packaging: packaging,
+           shipping: shipping,
+           note: document.getElementById('edit-acc-note').value.trim(),
+           isOfficial: document.getElementById('edit-acc-official').checked,
+           preorder: document.getElementById('edit-acc-preorder')?.checked || false,
+         }
           };
 
           records.push(record);
