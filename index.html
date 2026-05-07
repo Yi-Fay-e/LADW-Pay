@@ -1671,10 +1671,12 @@
       let welcomeCropPending = false;
 
       window.handleWelcomeAvatar = function(e) {
+        alert('handleWelcomeAvatar 觸發了');
         const file = e.target.files[0];
-        if (!file) return;
+        if (!file) { alert('沒有檔案'); return; }
         const reader = new FileReader();
         reader.onload = ev => {
+          alert('FileReader 完成');
           welcomeCropPending = true;
           const cropImage = document.getElementById('cropImage');
           cropImage.src = ev.target.result;
