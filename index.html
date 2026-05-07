@@ -3169,7 +3169,6 @@ const arrivalColor = getArrivalColor();
         }
 
         function confirmCrop() {
-          alert('confirmCrop 觸發，welcomeCropPending=' + window.welcomeCropPending);
           if (!cropper) { alert('cropper 不存在'); return; }
           const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
           const src = canvas.toDataURL('image/jpeg', 0.9);
