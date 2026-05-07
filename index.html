@@ -1537,12 +1537,12 @@
       <div style="display:flex; align-items:center; gap:12px;">
         <div id="welcome-avatar-preview" style="width:52px; height:52px; border-radius:50%; border:1px solid var(--border-gold); background:rgba(196,160,100,0.1); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:20px;">🌙</div>
         <button class="btn-ghost" onclick="document.getElementById('welcome-avatar-input').click()" style="font-size:12px;">上傳頭像</button>
-        <input type="file" id="welcome-avatar-input" accept="image/*" style="display:none" onchange="handleWelcomeAvatar(event)">
+        <input type="file" id="welcome-avatar-input" accept="image/*" style="display:none">
       </div>
     </div>
     <div style="display:flex; gap:10px;">
       <button class="btn-ghost" onclick="closeWelcomeModal()" style="flex:1;">跳過</button>
-      <button class="btn-primary" onclick="saveWelcomeSettings()" style="flex:2;">✦ 完成設定</button>
+<button class="btn-primary" id="welcome-save-btn" style="flex:2;">✦ 完成設定</button>
     </div>
   </div>
 </div>
@@ -1684,6 +1684,7 @@
           cropImage.src = ev.target.result;
           console.log('opening cropModal');
           document.getElementById('cropModal').classList.add('open');
+          document.getElementById('welcome-avatar-input').addEventListener('change', handleWelcomeAvatar);
           setTimeout(() => {
             console.log('init cropper');
             if (cropper) cropper.destroy();
@@ -1709,6 +1710,7 @@
         localStorage.setItem('ds_welcome_done', '1');
         loadUserSettings();
         document.getElementById('welcomeModal').classList.remove('open');
+        document.getElementById('welcome-save-btn').addEventListener('click', saveWelcomeSettings);
         showToast('✦ 設定完成，歡迎來到深空帳本！');
       }
 
