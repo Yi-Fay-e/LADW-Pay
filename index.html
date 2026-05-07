@@ -1546,8 +1546,6 @@
   </div>
 </div>
 <input type="file" id="welcome-avatar-input" accept="image/*" style="display:none">
-
-<!-- User Modal -->
     <div class="modal-overlay" id="userModal">
       <div class="modal-box">
         <div class="modal-title">深空獵人設定</div>
@@ -1722,9 +1720,6 @@
         checkArrivalNotifications();
         setTimeout(checkVersionModal, 500);
 
-        // 歡迎彈窗事件綁定（確保 DOM 完全載入後才綁定）
-        const welcomeAvatarInput = document.getElementById('welcome-avatar-input');
-        if (welcomeAvatarInput) welcomeAvatarInput.addEventListener('change', handleWelcomeAvatar);
         const welcomeSaveBtn = document.getElementById('welcome-save-btn');
         if (welcomeSaveBtn) welcomeSaveBtn.addEventListener('click', saveWelcomeSettings);
         const welcomeSkipBtn = document.getElementById('welcome-skip-btn');
@@ -3420,6 +3415,7 @@ const arrivalColor = getArrivalColor();
 
 init();
     </script>
+<input type="file" id="welcome-avatar-input" accept="image/*" style="display:none" onchange="handleWelcomeAvatar(event)">
 </body>
 
 </html>
