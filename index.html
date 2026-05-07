@@ -1667,17 +1667,15 @@
         }
       }
 
-      let welcomeAvatarBase64 = '';
-      let welcomeCropPending = false;
+      window.welcomeAvatarBase64 = '';
+      window.welcomeCropPending = false;
 
       window.handleWelcomeAvatar = function(e) {
-        alert('handleWelcomeAvatar 觸發了');
         const file = e.target.files[0];
-        if (!file) { alert('沒有檔案'); return; }
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = ev => {
-          alert('FileReader 完成');
-          welcomeCropPending = true;
+          window.welcomeCropPending = true;
           const cropImage = document.getElementById('cropImage');
           cropImage.src = ev.target.result;
           document.getElementById('cropModal').classList.add('open');
@@ -1696,10 +1694,10 @@
       window.saveWelcomeSettings = function() {
         const name = document.getElementById('welcome-name').value.trim();
         if (name) userSettings.name = name;
-        if (welcomeAvatarBase64) {
-          userSettings.avatar = welcomeAvatarBase64;
+        if (window.welcomeAvatarBase64) {
+          userSettings.avatar = window.welcomeAvatarBase64;
           const avatarRing = document.getElementById('avatarRing');
-          if (avatarRing) avatarRing.innerHTML = `<img src="${welcomeAvatarBase64}">`;
+          if (avatarRing) avatarRing.innerHTML = `<img src="${window.welcomeAvatarBase64}">`;
         }
         localStorage.setItem('ds_user', JSON.stringify(userSettings));
         localStorage.setItem('ds_welcome_done', '1');
@@ -3169,26 +3167,26 @@ const arrivalColor = getArrivalColor();
         }
 
         function confirmCrop() {
-  if (!cropper) return;
-  const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
-  const src = canvas.toDataURL('image/jpeg', 0.9);
+          if (!cropper) return;
+          const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
+          const src = canvas.toDataURL('image/jpeg', 0.9);
 
-  if (welcomeCropPending) {
-    welcomeAvatarBase64 = src;
-    document.getElementById('welcome-avatar-preview').innerHTML =
-      `<img src="${src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;
-    welcomeCropPending = false;
-    if (cropper) { cropper.destroy(); cropper = null; }
-    closeModal('cropModal');
-    return;
-  }
+          if (window.welcomeCropPending) {
+            window.welcomeAvatarBase64 = src;
+            document.getElementById('welcome-avatar-preview').innerHTML =
+              `<img src="${src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;
+            window.welcomeCropPending = false;
+            if (cropper) { cropper.destroy(); cropper = null; }
+            closeModal('cropModal');
+            return;
+          }
 
-  userSettings.avatar = src;
-  setAvatar(src);
-  document.getElementById('avatarLarge').innerHTML = `<img src="${src}">`;
-  if (cropper) { cropper.destroy(); cropper = null; }
-  closeModal('cropModal');
-}
+          userSettings.avatar = src;
+          setAvatar(src);
+          document.getElementById('avatarLarge').innerHTML = `<img src="${src}">`;
+          if (cropper) { cropper.destroy(); cropper = null; }
+          closeModal('cropModal');
+        }
 
         function setAvatar(src) {
           document.getElementById('avatarRing').innerHTML = `<img src="${src}">`;
