@@ -1583,7 +1583,7 @@
       </div>
     </div>
     <!-- Crop Modal -->
-    <div class="modal-overlay" id="cropModal">
+    <div class="modal-overlay" id="cropModal" style="z-index:210;">
       <div class="modal-box" style="max-width:480px;">
         <div class="modal-title">裁切頭像</div>
         <div style="width:100%; max-height:360px; overflow:hidden; border-radius:12px; margin-bottom:16px;">
@@ -1692,16 +1692,17 @@
       };
 
       window.saveWelcomeSettings = function() {
-        alert('saveWelcomeSettings 觸發，welcomeAvatarBase64長度=' + window.welcomeAvatarBase64.length);
         const name = document.getElementById('welcome-name').value.trim();
         if (name) userSettings.name = name;
-        if (window.welcomeAvatarBase64) {
-          userSettings.avatar = window.welcomeAvatarBase64;
+        const avatarSrc = window.welcomeAvatarBase64 || sessionStorage.getItem('_welcomeAvatar') || '';
+        if (avatarSrc) {
+          userSettings.avatar = avatarSrc;
           const avatarRing = document.getElementById('avatarRing');
-          if (avatarRing) avatarRing.innerHTML = `<img src="${window.welcomeAvatarBase64}">`;
+          if (avatarRing) avatarRing.innerHTML = `<img src="${avatarSrc}">`;
         }
         localStorage.setItem('ds_user', JSON.stringify(userSettings));
         localStorage.setItem('ds_welcome_done', '1');
+        sessionStorage.removeItem('_welcomeAvatar');
         loadUserSettings();
         document.getElementById('welcomeModal').classList.remove('open');
         showToast('✦ 設定完成，歡迎來到深空帳本！');
@@ -3175,7 +3176,7 @@ const arrivalColor = getArrivalColor();
 
           if (window.welcomeCropPending) {
             window.welcomeAvatarBase64 = src;
-            alert('welcomeAvatarBase64 已設定，長度=' + src.length);
+            sessionStorage.setItem('_welcomeAvatar', src);
             document.getElementById('welcome-avatar-preview').innerHTML =
               `<img src="${src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;
             window.welcomeCropPending = false;
