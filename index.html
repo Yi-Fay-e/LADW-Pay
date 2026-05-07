@@ -1540,12 +1540,12 @@
       </div>
     </div>
     <div style="display:flex; gap:10px;">
-      <button class="btn-ghost" id="welcome-skip-btn" style="flex:1;">跳過</button>
-      <button class="btn-primary" id="welcome-save-btn" style="flex:2;">✦ 完成設定</button>
+      <button class="btn-ghost" onclick="window.closeWelcomeModal()" style="flex:1;">跳過</button>
+      <button class="btn-primary" onclick="window.saveWelcomeSettings()" style="flex:2;">✦ 完成設定</button>
     </div>
   </div>
 </div>
-<input type="file" id="welcome-avatar-input" accept="image/*" style="display:none">
+<input type="file" id="welcome-avatar-input" accept="image/*" style="display:none" onchange="window.handleWelcomeAvatar(event)">
     <div class="modal-overlay" id="userModal">
       <div class="modal-box">
         <div class="modal-title">深空獵人設定</div>
@@ -1670,7 +1670,7 @@
       let welcomeAvatarBase64 = '';
       let welcomeCropPending = false;
 
-      function handleWelcomeAvatar(e) {
+      window.handleWelcomeAvatar = function(e) {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -1689,9 +1689,9 @@
           }, 300);
         };
         reader.readAsDataURL(file);
-      }
+      };
 
-      function saveWelcomeSettings() {
+      window.saveWelcomeSettings = function() {
         const name = document.getElementById('welcome-name').value.trim();
         if (name) userSettings.name = name;
         if (welcomeAvatarBase64) {
@@ -1704,12 +1704,12 @@
         loadUserSettings();
         document.getElementById('welcomeModal').classList.remove('open');
         showToast('✦ 設定完成，歡迎來到深空帳本！');
-      }
+      };
 
-      function closeWelcomeModal() {
+      window.closeWelcomeModal = function() {
         localStorage.setItem('ds_welcome_done', '1');
         document.getElementById('welcomeModal').classList.remove('open');
-      }
+      };
 
       function init() {
         setupStars();
@@ -1722,8 +1722,6 @@
 
         document.getElementById('confirmCropBtn').addEventListener('click', confirmCrop);
         document.getElementById('closeCropBtn').addEventListener('click', closeCropModal);
-        document.getElementById('welcome-save-btn').addEventListener('click', saveWelcomeSettings);
-        document.getElementById('welcome-skip-btn').addEventListener('click', closeWelcomeModal);
       }
 
       function setTodayDate() {
