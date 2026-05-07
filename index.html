@@ -1673,15 +1673,19 @@
       let welcomeCropPending = false;
 
       function handleWelcomeAvatar(e) {
+        console.log('handleWelcomeAvatar called');
         const file = e.target.files[0];
-        if (!file) return;
+        if (!file) { console.log('no file'); return; }
         const reader = new FileReader();
         reader.onload = ev => {
+          console.log('file loaded, setting welcomeCropPending=true');
           welcomeCropPending = true;
           const cropImage = document.getElementById('cropImage');
           cropImage.src = ev.target.result;
+          console.log('opening cropModal');
           document.getElementById('cropModal').classList.add('open');
           setTimeout(() => {
+            console.log('init cropper');
             if (cropper) cropper.destroy();
             cropper = new Cropper(cropImage, {
               aspectRatio: 1,
