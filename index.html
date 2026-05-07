@@ -1590,8 +1590,8 @@
           <img id="cropImage" style="max-width:100%; display:block;">
         </div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
-          <button class="btn-ghost" onclick="closeCropModal()">取消</button>
-          <button class="btn-primary" onclick="confirmCrop()">✦ 確認裁切</button>
+          <button class="btn-ghost" id="closeCropBtn">取消</button>
+          <button class="btn-primary" id="confirmCropBtn">✦ 確認裁切</button>
         </div>
       </div>
     </div>
@@ -1720,10 +1720,10 @@
         checkArrivalNotifications();
         setTimeout(checkVersionModal, 500);
 
-        const welcomeSaveBtn = document.getElementById('welcome-save-btn');
-        if (welcomeSaveBtn) welcomeSaveBtn.addEventListener('click', saveWelcomeSettings);
-        const welcomeSkipBtn = document.getElementById('welcome-skip-btn');
-        if (welcomeSkipBtn) welcomeSkipBtn.addEventListener('click', closeWelcomeModal);
+        document.getElementById('confirmCropBtn').addEventListener('click', confirmCrop);
+        document.getElementById('closeCropBtn').addEventListener('click', closeCropModal);
+        document.getElementById('welcome-save-btn').addEventListener('click', saveWelcomeSettings);
+        document.getElementById('welcome-skip-btn').addEventListener('click', closeWelcomeModal);
       }
 
       function setTodayDate() {
