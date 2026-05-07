@@ -2609,7 +2609,7 @@ const arrivalColor = getArrivalColor();
           <div style="color: ${isShipped ? 'var(--text-muted)' : 'var(--text-main)'}; font-weight: 400; font-size: 14px;">${product}</div>
           <div style="display:flex; gap:6px; align-items:center;">
             ${isShipped ? '<span style="background: rgba(112,180,144,0.2); color: #70b490; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✅ 已出貨</span>' : ''}
-            ${accData.isOfficial ? '<span style="background: rgba(255,193,7,0.2); color: #FFD700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✓ 官谷</span>' : ''}
+            ${accData.isOfficial ? '<span style="background: rgba(255,193,7,0.2); color: #FFD700; padding: 2px 8px; border-radius: 4px; font-size: 11px;"> 官谷</span>' : ''}
             ${accData.preorder ? '<span style="background:rgba(74,143,196,0.2);color:#4a8fc4;padding:2px 8px;border-radius:4px;font-size:11px;">預</span>' : ''}
           </div>
         </div>
@@ -2617,7 +2617,7 @@ const arrivalColor = getArrivalColor();
           <div style="color: var(--text-muted); font-size: 12px;">下單：<span style="color: #7ec8e3;">${dateStr}</span></div>
           <div style="color: var(--text-muted); font-size: 12px;">預計出貨：<span style="color: ${arrivalColor};">${arrivalStr}</span></div>
         </div>
-        <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 10px; text-align: left;">下單金額：<span style="color: var(--gold-light); font-size: 14px; font-weight: 500;">NT$${r.amount.toLocaleString()}</span></div>
+        <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 10px; text-align: left;">總金額：<span style="color: var(--gold-light); font-size: 14px; font-weight: 500;">NT$${r.amount.toLocaleString()}</span></div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <button class="btn-ghost" onclick="toggleAccessoryAllDetail('${r.id}'); event.stopPropagation();" style="font-size: 12px; padding: 6px 12px;">顯示更多</button>
           <div style="display: flex; gap: 6px;">
@@ -2677,7 +2677,7 @@ const arrivalColor = getArrivalColor();
         <input type="date" id="edit-date" value="${r.date}">
       </div>
       <div class="form-group">
-        <div class="form-label">下單金額（NT$）</div>
+        <div class="form-label">總金額（NT$）</div>
         <input type="number" id="edit-amount" value="${r.amount}" min="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
       </div>
     </div>
@@ -3027,7 +3027,7 @@ const arrivalColor = getArrivalColor();
         <input type="date" id="edit-date" value="${today}">
       </div>
       <div class="form-group">
-        <div class="form-label">下單金額（NT$）</div>
+        <div class="form-label">總金額（NT$）</div>
         <input type="number" id="edit-amount" value="0" min="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
       </div>
     </div>
