@@ -2176,7 +2176,7 @@
           <div class="record-main">
             <span class="record-type-name">${displayName}</span>
             ${badge ? `<span class="record-badge">${badge}</span>` : ''}
-            ${(r.type === 'accessory' && r.accessoryData?.preorder) ? `<span class="record-badge" style="background:rgba(74,143,196,0.2);color:#4a8fc4;border-color:rgba(74,143,196,0.4);">預</span>` : ''}
+            ${(r.type === 'accessory' && r.accessoryData?.preorder) ? `<span class="record-badge" style="background:rgba(126,200,227,0.25);color:#7ec8e3;border-color:rgba(74,143,196,0.4);">預</span>` : ''}
 ${r.payMethod === 'points' ? `<span class="record-badge" style="background: rgba(100,149,237,0.2); color: #6495ed; border-color: rgba(100,149,237,0.4);">💎 點數</span>` : ''}
             <span class="record-date">${dateStr}</span>
           </div>
@@ -2610,7 +2610,7 @@ const arrivalColor = getArrivalColor();
           <div style="display:flex; gap:6px; align-items:center;">
             ${isShipped ? '<span style="background: rgba(112,180,144,0.2); color: #70b490; padding: 2px 8px; border-radius: 4px; font-size: 11px;">✅ 已出貨</span>' : ''}
             ${accData.isOfficial ? '<span style="background: rgba(255,193,7,0.2); color: #FFD700; padding: 2px 8px; border-radius: 4px; font-size: 11px;"> 官谷</span>' : ''}
-            ${accData.preorder ? '<span style="background:rgba(74,143,196,0.2);color:#4a8fc4;padding:2px 8px;border-radius:4px;font-size:11px;">預</span>' : ''}
+            ${accData.preorder ? '<span style="background:rgba(126,200,227,0.25);color:#7ec8e3;padding:2px 8px;border-radius:4px;font-size:11px;">預</span>' : ''}
           </div>
         </div>
         <div style="display: flex; gap: 16px; margin-bottom: 10px;">
