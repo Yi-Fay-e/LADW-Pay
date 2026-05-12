@@ -499,6 +499,12 @@
           <div class="form-group">
             <div class="form-label">消費金額（NT$）</div>
             <input type="number" id="f-amount" placeholder="0" min="0" onfocus="if(this.value==='0'||this.value==='')this.value=''" onblur="if(this.value==='')this.value='0'">
+            <div id="weekly-last-hint" class="hidden"
+              style="font-size:13px; color:var(--text-muted); margin-top:6px; display:flex; align-items:center; gap:8px;">
+              <span id="weekly-last-text"></span>
+              <span onclick="applyLastWeekly()"
+                style="color:var(--gold-light); cursor:pointer; text-decoration:underline; white-space:nowrap;">✦ 套用</span>
+            </div>
           </div>
         </div>
         <div class="form-group" style="margin-bottom:14px">
@@ -517,12 +523,51 @@
           <div class="form-group"><div class="form-label">備註</div><input type="text" id="f-recharge-note" placeholder="例如：500點"></div>
         </div>
         <div id="extra-monthly" class="hidden" style="margin-bottom:14px">
-          <div class="form-group"><div class="form-label">付款方式</div>
+          <!-- 單價 × 數量 × 合計 -->
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+              <div class="form-group" style="flex:1; min-width:90px;">
+                <div class="form-label">單價（NT$）</div>
+                <input type="number" id="f-monthly-price" value="150" min="1"
+                  oninput="updateMonthlyTotal()"
+                  style="text-align:center;">
+              </div>
+              <div class="form-group" style="flex:1; min-width:120px;">
+                <div class="form-label">數量</div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" onclick="changeMonthlyQty(-1)"
+                    style="width:34px;height:36px;border:1px solid var(--border-gold);background:transparent;color:var(--gold);border-radius:6px;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">−</button>
+                  <input type="number" id="f-monthly-qty" value="1" min="1" max="99"
+                    oninput="updateMonthlyTotal()"
+                    style="text-align:center; flex:1; min-width:0; padding:8px 4px;">
+                  <button type="button" onclick="changeMonthlyQty(1)"
+                    style="width:34px;height:36px;border:1px solid var(--border-gold);background:transparent;color:var(--gold);border-radius:6px;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">＋</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="form-label">合計</div>
+              <div id="f-monthly-total"
+                style="padding:8px 16px; border:1px solid var(--border-gold); border-radius:8px; background:rgba(196,160,100,0.08); color:var(--gold-light); font-family:'Noto Serif TC',serif; font-size:17px; text-align:center; margin-top:6px;">
+                NT$150
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <div class="form-label">付款方式</div>
             <div class="type-selector">
               <button class="type-btn selected" data-pay="cash" onclick="selectPayMethod('monthly','cash')">💵 現金</button>
               <button class="type-btn" data-pay="points" onclick="selectPayMethod('monthly','points')">💎 點數</button>
             </div>
           </div>
+          <div id="monthly-last-hint" class="hidden"
+            style="font-size:12px; color:var(--text-muted); margin-top:4px; display:flex; align-items:center; gap:8px;">
+            <span id="monthly-last-text"></span>
+            <span onclick="applyLastMonthly()"
+              style="color:var(--gold-light); cursor:pointer; text-decoration:underline; white-space:nowrap;">✦ 套用</span>
+          </div>
+        </div>
+        <div id="extra-weekly" class="hidden" style="margin-bottom:14px">
         </div>
         <div id="extra-pact" class="hidden" style="margin-bottom:14px">
           <div class="form-row" style="margin-bottom:10px">
@@ -707,75 +752,29 @@
     <!-- 版本更新彈窗 -->
     <div class="modal-overlay" id="versionModal" style="z-index:200;">
       <div class="modal-box" style="max-width:340px; text-align:center; padding:36px 32px;">
-
-        <!-- 頂部裝飾線 -->
         <div style="font-family:'Noto Serif TC',serif; font-size:10px; color:var(--text-muted); letter-spacing:0.25em; margin-bottom:10px;">DEEP SPACE LEDGER</div>
-        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.1.1</div>
-        <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.05.11</div>
+        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.2.0</div>
+        <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.05.12</div>
         <div style="width:48px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 24px;"></div>
-
-        <!-- 更新內容 -->
         <div style="text-align:left; margin-bottom:28px; display:flex; flex-direction:column; gap:16px;">
-
           <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 周邊手帳</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">
-              新增關鍵字搜尋功能<br>
-              輸入關鍵字快速查找手帳紀錄
-            </div>
+            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 月卡快速記帳</div>
+            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">新增單價 × 數量自動計算合計<br>可一次記錄多張月卡</div>
           </div>
-
           <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(196,160,100,0.15),transparent);"></div>
-
           <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 記帳頁面</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">
-              「其他」類型支援自訂名稱<br>
-              點擊 ✎ 即可修改，全域同步生效
-            </div>
+            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 週卡快速記帳</div>
+            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">自動顯示上次週卡金額<br>一鍵套用，快速完成記帳</div>
           </div>
-
-          <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(196,160,100,0.15),transparent);"></div>
-
-          <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 備份</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">
-              新增「取消」按鈕
-            </div>
-          </div>
-
-          <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(196,160,100,0.15),transparent);"></div>
-
-          <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 記帳頁面微調</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">
-              「其他」點擊 ✎展開後之說明微調
-            </div>
-          </div>
-
         </div>
-
-        <!-- 知道了按鈕（D 方案光暈雙圈打勾） -->
-        <button onclick="closeVersionModal()" style="
-          width:100%; padding:12px 0;
-          background:linear-gradient(135deg,rgba(196,160,100,0.25),rgba(196,160,100,0.12));
-          border:1px solid var(--gold); border-radius:28px;
-          color:var(--gold-light); font-family:'Noto Serif TC',serif;
-          font-size:14px; letter-spacing:0.08em;
-          cursor:pointer; transition:all 0.25s;
-          display:flex; align-items:center; justify-content:center; gap:10px;">
-          <!-- D 方案 SVG 打勾：光暈雙圈 -->
+        <button onclick="closeVersionModal()" style="width:100%; padding:12px 0; background:linear-gradient(135deg,rgba(196,160,100,0.25),rgba(196,160,100,0.12)); border:1px solid var(--gold); border-radius:28px; color:var(--gold-light); font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.08em; cursor:pointer; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:10px;">
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-            <!-- 外圈光暈 -->
             <circle cx="11" cy="11" r="10" stroke="rgba(196,160,100,0.22)" stroke-width="5"/>
-            <!-- 內圈金色細線 -->
             <circle cx="11" cy="11" r="8.5" stroke="#c4a064" stroke-width="1.1"/>
-            <!-- 打勾 -->
             <polyline points="6.5,11 9.5,14.5 15.5,7.5" stroke="#e8c880" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
           知道了
         </button>
-
       </div>
     </div>
 
@@ -941,7 +940,7 @@
         weekly: '#70b490', package: '#f0a868', accessory: '#d4a86e', other: '#999'
       };
 
-      const CURRENT_VERSION = 'v1.1.0';
+      const CURRENT_VERSION = 'v1.2.0';
 
       // ── Version / Welcome ──
       function checkVersionModal() {
@@ -1096,10 +1095,12 @@
       function selectType(type) {
         selectedType = type;
         document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === type));
-        ['recharge','monthly','pact','accessory','other','package'].forEach(t => {
-          document.getElementById('extra-'+t).classList.toggle('hidden', t !== type);
+        ['recharge','monthly','weekly','pact','accessory','other','package'].forEach(t => {
+          const el = document.getElementById('extra-'+t);
+          if (el) el.classList.toggle('hidden', t !== type);
         });
-        // 選「其他」時更新名稱顯示列、收折編輯區、帶入目前名稱
+        if (type === 'monthly') { updateMonthlyTotal(); showLastHint('monthly'); }
+        if (type === 'weekly') { showLastHint('weekly'); }
         if (type === 'other') {
           const label = document.getElementById('other-name-label');
           if (label) label.textContent = getOtherName();
@@ -1111,12 +1112,71 @@
         document.querySelectorAll(`#editModalContent .type-btn[data-pay]`).forEach(b => b.classList.toggle('selected', b.dataset.pay === method));
       }
 
+      // ── 月卡數量與合計 ──
+      function changeMonthlyQty(d) {
+        const qtyEl = document.getElementById('f-monthly-qty');
+        let qty = parseInt(qtyEl.value) || 1;
+        qty = Math.max(1, qty + d);
+        qtyEl.value = qty;
+        updateMonthlyTotal();
+      }
+      function updateMonthlyTotal() {
+        const price = parseFloat(document.getElementById('f-monthly-price').value) || 150;
+        const qty = parseInt(document.getElementById('f-monthly-qty').value) || 1;
+        const total = document.getElementById('f-monthly-total');
+        if (total) total.textContent = `NT$${(price * qty).toLocaleString()}`;
+      }
+
+      // ── 上次記帳提示（月卡 / 週卡）──
+      function showLastHint(type) {
+        const last = [...records].filter(r => r.type === type).sort((a,b) => b.id.localeCompare(a.id))[0];
+        if (!last) return;
+        if (type === 'monthly') {
+          const hint = document.getElementById('monthly-last-hint');
+          const text = document.getElementById('monthly-last-text');
+          if (!hint || !text) return;
+          const qty = last.note && last.note.match(/×(\d+)/) ? parseInt(last.note.match(/×(\d+)/)[1]) : 1;
+          const price = qty > 1 ? Math.round(last.amount / qty) : last.amount;
+          const payLabel = last.payMethod === 'points' ? '💎 點數' : '💵 現金';
+          text.textContent = `上次：NT$${price} × ${qty}（${payLabel}）`;
+          hint.classList.remove('hidden');
+        } else if (type === 'weekly') {
+          const hint = document.getElementById('weekly-last-hint');
+          const text = document.getElementById('weekly-last-text');
+          if (!hint || !text) return;
+          text.textContent = `上次記帳：NT$${last.amount.toLocaleString()}`;
+          hint.classList.remove('hidden');
+        }
+      }
+      function applyLastMonthly() {
+        const last = [...records].filter(r => r.type === 'monthly').sort((a,b) => b.id.localeCompare(a.id))[0];
+        if (!last) return;
+        const qty = last.note && last.note.match(/×(\d+)/) ? parseInt(last.note.match(/×(\d+)/)[1]) : 1;
+        const price = qty > 1 ? Math.round(last.amount / qty) : last.amount;
+        document.getElementById('f-monthly-price').value = price;
+        document.getElementById('f-monthly-qty').value = qty;
+        updateMonthlyTotal();
+        // 套用付款方式
+        const method = last.payMethod === 'points' ? 'points' : 'cash';
+        selectPayMethod('monthly', method);
+        showToast('✦ 已套用上次月卡紀錄');
+      }
+      function applyLastWeekly() {
+        const last = [...records].filter(r => r.type === 'weekly').sort((a,b) => b.id.localeCompare(a.id))[0];
+        if (!last) return;
+        document.getElementById('f-amount').value = last.amount;
+        showToast('✦ 已套用上次週卡金額');
+      }
+
       // ── Save Record ──
       function saveRecord() {
         const date = document.getElementById('f-date').value;
-        const amount = parseFloat(document.getElementById('f-amount').value);
         if (!date) { showToast('請選擇日期'); return; }
         if (!selectedType) { showToast('請選擇消費類型'); return; }
+        // 月卡金額由程式計算，不從 f-amount 讀
+        const amount = selectedType === 'monthly'
+          ? (parseFloat(document.getElementById('f-monthly-price').value)||150) * (parseInt(document.getElementById('f-monthly-qty').value)||1)
+          : parseFloat(document.getElementById('f-amount').value);
         if (isNaN(amount) || amount <= 0) { showToast('請輸入有效金額'); return; }
         const record = { id: Date.now().toString(), date, type: selectedType, amount, note: '', pactTypes: [], pactChar: '' };
         if (selectedType === 'accessory') {
@@ -1136,6 +1196,10 @@
           const payBtn = document.querySelector('#extra-package .type-btn[data-pay].selected');
           record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
         } else if (selectedType === 'monthly') {
+          const price = parseFloat(document.getElementById('f-monthly-price').value) || 150;
+          const qty = parseInt(document.getElementById('f-monthly-qty').value) || 1;
+          record.amount = price * qty;
+          if (qty > 1) record.note = `月卡 ×${qty}`;
           const payBtn = document.querySelector('#extra-monthly .type-btn[data-pay].selected');
           record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
         } else if (selectedType === 'other') {
@@ -1153,7 +1217,15 @@
         document.getElementById('f-amount').value = '0'; setTodayDate();
         selectedType = '';
         document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-        ['recharge','monthly','pact','other','package','accessory'].forEach(t => document.getElementById('extra-'+t).classList.add('hidden'));
+        ['recharge','monthly','weekly','pact','other','package','accessory'].forEach(t => {
+          const el = document.getElementById('extra-'+t); if (el) el.classList.add('hidden');
+        });
+        // 重置月卡欄位
+        const mp = document.getElementById('f-monthly-price'); if (mp) mp.value = '150';
+        const mq = document.getElementById('f-monthly-qty'); if (mq) mq.value = '1';
+        const mt = document.getElementById('f-monthly-total'); if (mt) mt.textContent = 'NT$150';
+        const wh = document.getElementById('weekly-last-hint'); if (wh) wh.classList.add('hidden');
+        const mh = document.getElementById('monthly-last-hint'); if (mh) mh.classList.add('hidden');
         document.getElementById('f-recharge-note').value = '';
         document.getElementById('f-pact-char').value = '';
         document.getElementById('f-other-note').value = '';
