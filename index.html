@@ -587,12 +587,13 @@
           </div>
         </div>
         <div id="extra-package" class="hidden" style="margin-bottom:14px">
-          <div class="form-group"><div class="form-label">付款方式</div>
+          <div class="form-group" style="margin-bottom:10px;"><div class="form-label">付款方式</div>
             <div class="type-selector">
               <button class="type-btn selected" data-pay="cash" onclick="selectPayMethod('package','cash')">💵 現金</button>
               <button class="type-btn" data-pay="points" onclick="selectPayMethod('package','points')">💎 點數</button>
             </div>
           </div>
+          <div class="form-group"><div class="form-label">備註</div><input type="text" id="f-package-note" placeholder="例如：活動、卡池名稱..."></div>
         </div>
         <div id="extra-accessory" class="hidden" style="margin-bottom:14px">
           <div class="form-group">
@@ -753,18 +754,13 @@
     <div class="modal-overlay" id="versionModal" style="z-index:200;">
       <div class="modal-box" style="max-width:340px; text-align:center; padding:36px 32px;">
         <div style="font-family:'Noto Serif TC',serif; font-size:10px; color:var(--text-muted); letter-spacing:0.25em; margin-bottom:10px;">DEEP SPACE LEDGER</div>
-        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.2.0</div>
-        <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.05.12</div>
+        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.3.0</div>
+        <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.06.10</div>
         <div style="width:48px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 24px;"></div>
         <div style="text-align:left; margin-bottom:28px; display:flex; flex-direction:column; gap:16px;">
           <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 月卡快速記帳</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">新增單價 × 數量自動計算合計<br>可一次記錄多張月卡</div>
-          </div>
-          <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(196,160,100,0.15),transparent);"></div>
-          <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 週卡快速記帳</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">自動顯示上次週卡金額<br>一鍵套用，快速完成記帳</div>
+            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 更新資訊</div>
+            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">禮包新增備註欄位</div>
           </div>
         </div>
         <button onclick="closeVersionModal()" style="width:100%; padding:12px 0; background:linear-gradient(135deg,rgba(196,160,100,0.25),rgba(196,160,100,0.12)); border:1px solid var(--gold); border-radius:28px; color:var(--gold-light); font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.08em; cursor:pointer; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:10px;">
@@ -940,7 +936,7 @@
         weekly: '#70b490', package: '#f0a868', accessory: '#d4a86e', other: '#999'
       };
 
-      const CURRENT_VERSION = 'v1.2.0';
+      const CURRENT_VERSION = 'v1.3.0';
 
       // ── Version / Welcome ──
       function checkVersionModal() {
@@ -1195,6 +1191,7 @@
         } else if (selectedType === 'package') {
           const payBtn = document.querySelector('#extra-package .type-btn[data-pay].selected');
           record.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
+          record.note = document.getElementById('f-package-note').value.trim();
         } else if (selectedType === 'monthly') {
           const price = parseFloat(document.getElementById('f-monthly-price').value) || 150;
           const qty = parseInt(document.getElementById('f-monthly-qty').value) || 1;
@@ -1224,6 +1221,7 @@
         const mp = document.getElementById('f-monthly-price'); if (mp) mp.value = '150';
         const mq = document.getElementById('f-monthly-qty'); if (mq) mq.value = '1';
         const mt = document.getElementById('f-monthly-total'); if (mt) mt.textContent = 'NT$150';
+        const pnf = document.getElementById('f-package-note'); if (pnf) pnf.value = '';
         const wh = document.getElementById('weekly-last-hint'); if (wh) wh.classList.add('hidden');
         const mh = document.getElementById('monthly-last-hint'); if (mh) mh.classList.add('hidden');
         document.getElementById('f-recharge-note').value = '';
@@ -1308,10 +1306,12 @@
             </div>`;
         } else if (r.type === 'package') {
           const sp = r.payMethod === 'points' ? 'points' : 'cash';
-          extraHtml = `<div class="form-group"><div class="form-label">付款方式</div><div class="type-selector">
-            <button class="type-btn ${sp==='cash'?'selected':''}" data-pay="cash" onclick="selectPayMethod('package','cash')">💵 現金</button>
-            <button class="type-btn ${sp==='points'?'selected':''}" data-pay="points" onclick="selectPayMethod('package','points')">💎 點數</button>
-          </div></div>`;
+          extraHtml = `
+            <div class="form-group" style="margin-bottom:10px;"><div class="form-label">付款方式</div><div class="type-selector">
+              <button class="type-btn ${sp==='cash'?'selected':''}" data-pay="cash" onclick="selectPayMethod('package','cash')">💵 現金</button>
+              <button class="type-btn ${sp==='points'?'selected':''}" data-pay="points" onclick="selectPayMethod('package','points')">💎 點數</button>
+            </div></div>
+            <div class="form-group"><div class="form-label">備註</div><input type="text" id="edit-package-note" value="${r.note||''}" placeholder="例如：活動、卡池名稱..."></div>`;
         } else if (r.type === 'monthly') {
           const sp = r.payMethod === 'points' ? 'points' : 'cash';
           extraHtml = `<div class="form-group"><div class="form-label">付款方式</div><div class="type-selector">
@@ -1350,6 +1350,7 @@
         } else if (r.type === 'monthly' || r.type === 'package') {
           const payBtn = document.querySelector('#editModalContent .type-btn[data-pay].selected');
           r.payMethod = payBtn ? payBtn.dataset.pay : 'cash';
+          if (r.type === 'package') r.note = (document.getElementById('edit-package-note')?.value||'').trim();
         } else if (r.type === 'recharge' || r.type === 'other') {
           r.note = (document.getElementById('edit-note')?.value||'').trim();
         } else if (r.type === 'pact') {
@@ -1408,6 +1409,7 @@
             const ts = typeStyles[r.type]||typeStyles.other;
             let badge='', note='', displayName=t.name;
             if (r.type==='recharge'&&r.note) note=r.note;
+            if (r.type==='package'&&r.note) note=r.note;
             if (r.type==='pact') { if(r.pactTypes.length) badge=r.pactTypes.join('・'); if(r.pactChar) note=r.pactChar; }
             if (r.type==='accessory') { const a=r.accessoryData||{}; displayName='周邊'; note=a.product||''; if(a.isOfficial) badge='官谷'; }
             if (r.type==='other'&&r.note) note=r.note;
