@@ -4,6 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>深空帳本 · Love & Deepspace</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -754,13 +757,16 @@
     <div class="modal-overlay" id="versionModal" style="z-index:200;">
       <div class="modal-box" style="max-width:340px; text-align:center; padding:36px 32px;">
         <div style="font-family:'Noto Serif TC',serif; font-size:10px; color:var(--text-muted); letter-spacing:0.25em; margin-bottom:10px;">DEEP SPACE LEDGER</div>
-        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.3.0</div>
+        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.3.1</div>
         <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.06.10</div>
         <div style="width:48px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 24px;"></div>
         <div style="text-align:left; margin-bottom:28px; display:flex; flex-direction:column; gap:16px;">
           <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 更新資訊</div>
-            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">禮包新增備註欄位</div>
+            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 更新訊息</div>
+            <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">
+              1.「禮包」新增備註欄位<br>
+              2.優化桌面捷徑快取設定<br>3.修正週卡「上次記帳」提示
+            </div>
           </div>
         </div>
         <button onclick="closeVersionModal()" style="width:100%; padding:12px 0; background:linear-gradient(135deg,rgba(196,160,100,0.25),rgba(196,160,100,0.12)); border:1px solid var(--gold); border-radius:28px; color:var(--gold-light); font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.08em; cursor:pointer; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:10px;">
@@ -936,7 +942,7 @@
         weekly: '#70b490', package: '#f0a868', accessory: '#d4a86e', other: '#999'
       };
 
-      const CURRENT_VERSION = 'v1.3.0';
+      const CURRENT_VERSION = 'v1.3.1';
 
       // ── Version / Welcome ──
       function checkVersionModal() {
@@ -1095,6 +1101,9 @@
           const el = document.getElementById('extra-'+t);
           if (el) el.classList.toggle('hidden', t !== type);
         });
+        // 非週卡時隱藏上次記帳提示
+        const wh = document.getElementById('weekly-last-hint');
+        if (wh) wh.classList.toggle('hidden', type !== 'weekly');
         if (type === 'monthly') { updateMonthlyTotal(); showLastHint('monthly'); }
         if (type === 'weekly') { showLastHint('weekly'); }
         if (type === 'other') {
