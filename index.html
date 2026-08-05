@@ -453,6 +453,18 @@
     #accessoryAllList {
       max-width: 1000px; margin: 0 auto; padding: 0 62px;
     }
+    .acc-list-row {
+      display:flex; align-items:center; padding:9px 12px;
+      border-bottom:1px solid rgba(196,160,100,0.1);
+      cursor:pointer; transition:background 0.15s; font-size:12px;
+    }
+    .acc-list-row:hover { background:rgba(196,160,100,0.05); }
+    .acc-list-date { color:rgba(200,185,220,0.7); flex-shrink:0; width:42px; }
+    .acc-list-preorder { width:20px; flex-shrink:0; text-align:center; font-size:10px; color:#7ec8e3; }
+    .acc-list-name { flex:1; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 8px; text-align:left; }
+    .acc-list-amount { flex-shrink:0; color:var(--gold-light); font-family:'Noto Serif TC',serif; font-size:12px; text-align:right; min-width:70px; }
+    .acc-list-status { flex-shrink:0; display:flex; align-items:center; gap:4px; margin-left:10px; min-width:80px; justify-content:flex-end; }
+    .acc-list-detail { padding:12px 12px 14px; border-bottom:1px solid rgba(196,160,100,0.15); font-size:12px; background:rgba(196,160,100,0.03); }
   </style>
 </head>
 
@@ -604,7 +616,7 @@
             <input type="text" id="f-accessory-product" placeholder="例如：徽章/明日無處可逃系列">
           </div>
           <div style="display:inline-flex;gap:16px;align-items:center;margin-bottom:8px;">
-            <label class="check-item"><input type="checkbox" id="f-accessory-official"><div class="check-box"></div><span class="check-label">官谷</span></label>
+            <label class="check-item"><input type="checkbox" id="f-accessory-official"><div class="check-box"></div><span class="check-label">官周</span></label>
             <label class="check-item"><input type="checkbox" id="f-accessory-preorder"><div class="check-box"></div><span class="check-label">預購</span></label>
           </div>
           <div class="form-group">
@@ -697,24 +709,30 @@
 
     <!-- ═══ TAB: ACCESSORY ═══ -->
     <div id="tab-accessory" class="hidden analysis-wrap">
-      <div style="display:flex;gap:12px;margin-bottom:12px;justify-content:center;align-items:center;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <button class="btn-ghost selected" onclick="switchAccessoryView('all')" id="btn-accessory-all">顯示全部</button>
-        <button class="btn-ghost" onclick="openAccessoryAdd()" id="btn-accessory-add">✦ 新增周邊</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn-ghost" onclick="openAccessoryAdd()" id="btn-accessory-add">✦ 新增周邊</button>
+          <button id="view-card-btn" onclick="setAccessoryViewMode('card')" title="卡片檢視"
+            style="width:30px;height:30px;border:1px solid var(--border-gold);border-radius:6px;background:rgba(196,160,100,0.2);color:var(--gold-light);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">⊞</button>
+          <button id="view-list-btn" onclick="setAccessoryViewMode('list')" title="條列檢視"
+            style="width:30px;height:30px;border:1px solid var(--border-gold);border-radius:6px;background:transparent;color:var(--text-muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">≡</button>
+        </div>
       </div>
-      <div style="display:flex;justify-content:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
         <select id="accessory-month-filter" onchange="filterAccessoryByMonth(this.value)"
-          style="background:#0c1430;border:1px solid var(--border-gold);color:var(--text-muted);border-radius:20px;padding:6px 16px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;max-width:160px;">
+          style="background:#0c1430;border:1px solid var(--border-gold);color:var(--text-muted);border-radius:20px;padding:6px 16px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;flex-shrink:0;max-width:140px;">
           <option value="all">全部月份</option>
         </select>
-        <div style="position:relative;display:flex;align-items:center;">
+        <div style="position:relative;display:flex;align-items:center;flex:1;min-width:0;">
           <input type="text" id="accessory-search" placeholder="🔍 搜尋商品名稱、賣場、備註" oninput="searchAccessory(this.value)"
-            style="background:#0c1430;border:1px solid var(--border-gold);color:var(--text-main);border-radius:20px;padding:6px 16px 6px 14px;font-size:12px;font-family:'Noto Sans TC',sans-serif;width:220px;outline:none;">
+            style="background:#0c1430;border:1px solid var(--border-gold);color:var(--text-main);border-radius:20px;padding:6px 16px 6px 14px;font-size:12px;font-family:'Noto Sans TC',sans-serif;width:100%;outline:none;">
           <button id="accessory-search-clear" onclick="clearAccessorySearch()" class="hidden"
             style="position:absolute;right:10px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button>
         </div>
       </div>
       <div id="accessoryNotifications" style="margin-bottom:20px;"></div>
-      <div id="accessory-all-view" style="text-align:center;margin:0 62px;">
+      <div id="accessory-all-view" style="text-align:center;">
         <div class="chart-title">所有周邊紀錄</div>
         <div id="accessoryTotal" style="font-size:13px;color:var(--text-muted);margin-bottom:16px;"></div>
         <div id="accessoryAllList"></div>
@@ -757,15 +775,14 @@
     <div class="modal-overlay" id="versionModal" style="z-index:200;">
       <div class="modal-box" style="max-width:340px; text-align:center; padding:36px 32px;">
         <div style="font-family:'Noto Serif TC',serif; font-size:10px; color:var(--text-muted); letter-spacing:0.25em; margin-bottom:10px;">DEEP SPACE LEDGER</div>
-        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.3.1</div>
-        <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.06.10</div>
+        <div style="font-family:'Noto Serif TC',serif; font-size:24px; color:var(--gold-light); margin-bottom:4px; letter-spacing:0.05em;">v1.4.0</div>
+        <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:6px;">2026.07.08</div>
         <div style="width:48px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 24px;"></div>
         <div style="text-align:left; margin-bottom:28px; display:flex; flex-direction:column; gap:16px;">
           <div>
-            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 更新訊息</div>
+            <div style="font-family:'Noto Serif TC',serif; font-size:12px; color:var(--gold); letter-spacing:0.12em; margin-bottom:6px;">✦ 版面優化</div>
             <div style="font-size:12px; color:var(--text-muted); line-height:1.9; padding-left:1em;">
-              1.「禮包」新增備註欄位<br>
-              2.優化桌面捷徑快取設定<br>3.修正週卡「上次記帳」提示
+              優化周邊手帳-新增條列模式<br>手帳條列式標題展開後顯示完整內容<br>「官谷」一詞調整為「官周」<br>調整出貨狀態點選方式
             </div>
           </div>
         </div>
@@ -942,7 +959,7 @@
         weekly: '#70b490', package: '#f0a868', accessory: '#d4a86e', other: '#999'
       };
 
-      const CURRENT_VERSION = 'v1.3.1';
+      const CURRENT_VERSION = 'v1.4.1';
 
       // ── Version / Welcome ──
       function checkVersionModal() {
@@ -1310,7 +1327,7 @@
             </div>
             <div class="form-group"><div class="form-label">商品名稱</div><input type="text" id="edit-accessory-product" value="${accData.product||''}" placeholder="商品名稱"></div>
             <div style="display:inline-flex;gap:16px;align-items:center;margin-bottom:8px;">
-              <label class="check-item"><input type="checkbox" id="edit-accessory-official" ${accData.isOfficial?'checked':''}><div class="check-box"></div><span class="check-label">官谷</span></label>
+              <label class="check-item"><input type="checkbox" id="edit-accessory-official" ${accData.isOfficial?'checked':''}><div class="check-box"></div><span class="check-label">官周</span></label>
               <label class="check-item"><input type="checkbox" id="edit-acc-preorder" ${accData.preorder?'checked':''}><div class="check-box"></div><span class="check-label">預購</span></label>
             </div>`;
         } else if (r.type === 'package') {
@@ -1420,7 +1437,7 @@
             if (r.type==='recharge'&&r.note) note=r.note;
             if (r.type==='package'&&r.note) note=r.note;
             if (r.type==='pact') { if(r.pactTypes.length) badge=r.pactTypes.join('・'); if(r.pactChar) note=r.pactChar; }
-            if (r.type==='accessory') { const a=r.accessoryData||{}; displayName='周邊'; note=a.product||''; if(a.isOfficial) badge='官谷'; }
+            if (r.type==='accessory') { const a=r.accessoryData||{}; displayName='周邊'; note=a.product||''; if(a.isOfficial) badge='官周'; }
             if (r.type==='other'&&r.note) note=r.note;
             const dateStr = new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'});
             return `<div class="record-item" data-record-id="${r.id}" style="border-left:4px solid ${ts.border};background:linear-gradient(135deg,${ts.bg} 0%,var(--bg-card) 40%);">
@@ -1616,9 +1633,7 @@
       function renderAccessoryTab() {
         renderAccessoryNotifications();
         populateAccessoryMonthFilter();
-        const filterEl = document.getElementById('accessory-month-filter');
-        const currentFilter = filterEl.value;
-        renderAccessoryAllView(currentFilter === 'all' ? null : currentFilter);
+        setAccessoryViewMode(accessoryViewMode);
       }
 
       function switchAccessoryView(view) {
@@ -1704,7 +1719,22 @@
       }
 
       function toggleYearDetail(type){const el=document.getElementById('yearDetail-'+type);if(el)el.classList.toggle('hidden');}
-      function toggleAccessoryAllDetail(id){const d=document.getElementById('all-detail-'+id);if(d)d.classList.toggle('hidden');}
+      function toggleAccessoryAllDetail(id){
+        const d=document.getElementById('all-detail-'+id);
+        if(!d) return;
+        d.classList.toggle('hidden');
+        // 展開時讓標題欄完整顯示，收合時恢復截斷
+        const row=d.previousElementSibling;
+        if(row){
+          const nameEl=row.querySelector('.acc-list-name');
+          if(nameEl){
+            const isOpen=!d.classList.contains('hidden');
+            nameEl.style.whiteSpace=isOpen?'normal':'nowrap';
+            nameEl.style.overflow=isOpen?'visible':'hidden';
+            nameEl.style.textOverflow=isOpen?'unset':'ellipsis';
+          }
+        }
+      }
 
       function toggleShipped(id){
         const r=records.find(x=>x.id===id); if(!r||!r.accessoryData) return;
@@ -1739,12 +1769,6 @@
         }
         const currentPage=parseInt(document.getElementById('accessoryCurrentPage')?.value||'1');
         const pageRecs=allRecs.slice((currentPage-1)*pageSize,currentPage*pageSize);
-        const monthColors=[
-          {border:'#8b7fd4',bg:'rgba(139,127,212,0.15)'},{border:'#4a8fc4',bg:'rgba(74,143,196,0.15)'},
-          {border:'#70b490',bg:'rgba(112,180,144,0.15)'},{border:'#c4a064',bg:'rgba(196,160,100,0.15)'},
-          {border:'#c47070',bg:'rgba(196,112,112,0.15)'},{border:'#9990bb',bg:'rgba(153,144,187,0.15)'},
-        ];
-        const monthColorMap={}; let colorIdx=0;
         const totalAmt=allRecs.reduce((s,r)=>s+r.amount,0);
         const totalEl=document.getElementById('accessoryTotal');
         if(totalEl) {
@@ -1757,32 +1781,73 @@
           }
         }
 
-        document.getElementById('accessoryAllList').innerHTML=pageRecs.map(r=>{
-          const a=r.accessoryData||{},product=a.product||'周邊';
+        document.getElementById('accessoryAllList').innerHTML = accessoryViewMode === 'list'
+          ? renderListView(pageRecs)
+          : renderCardView(pageRecs);
+
+        if(totalPages>1){
+          document.getElementById('accessoryPagination').innerHTML=Array.from({length:totalPages},(_,i)=>i+1).map(p=>
+            `<button class="btn-ghost" style="font-size:12px;padding:4px 10px;${p===currentPage?'background:rgba(196,160,100,0.2);color:var(--gold);':''}" onclick="goAccessoryPage(${p})">${p}</button>`
+          ).join('');
+        } else { document.getElementById('accessoryPagination').innerHTML=''; }
+      }
+
+      // ── 周邊手帳：出貨日顏色 ──
+      function _getArrivalColor(a, isShipped) {
+        if (isShipped) return 'var(--text-muted)';
+        if (!a.expectedArrivalDate) return 'rgba(200,185,220,0.4)';
+        const today=new Date(); today.setHours(0,0,0,0);
+        const arr=new Date(a.expectedArrivalDate+'T00:00:00');
+        const diff=Math.ceil((arr-today)/(1000*60*60*24));
+        return diff<0?'#ff6b6b':diff<=10?'#e07830':'#7ec8e3';
+      }
+
+      // ── 卡片模式 ──
+      function renderCardView(pageRecs) {
+        const monthColors=[
+          {border:'#8b7fd4',bg:'rgba(139,127,212,0.15)'},{border:'#4a8fc4',bg:'rgba(74,143,196,0.15)'},
+          {border:'#70b490',bg:'rgba(112,180,144,0.15)'},{border:'#c4a064',bg:'rgba(196,160,100,0.15)'},
+          {border:'#c47070',bg:'rgba(196,112,112,0.15)'},{border:'#9990bb',bg:'rgba(153,144,187,0.15)'},
+        ];
+        const monthColorMap={}; let colorIdx=0;
+        return pageRecs.map(r=>{
+          const a=r.accessoryData||{}, product=a.product||'周邊';
+          const isShipped=a.shipped===true;
+          const hasArrival=!!a.expectedArrivalDate;
           const dateStr=new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
-          const arrivalStr=a.expectedArrivalDate?new Date(a.expectedArrivalDate+'T00:00:00').toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'}):'未填';
+          const arrivalStr=hasArrival?new Date(a.expectedArrivalDate+'T00:00:00').toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'}):'—';
+          const arrivalColor=_getArrivalColor(a, isShipped);
           const monthKey=new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit'});
           if(!monthColorMap[monthKey]){monthColorMap[monthKey]=monthColors[colorIdx%monthColors.length];colorIdx++;}
           const mc=monthColorMap[monthKey];
           const isFirst=!pageRecs.slice(0,pageRecs.indexOf(r)).some(pr=>new Date(pr.date+'T00:00:00').toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit'})===monthKey);
+          const cardBorderColor=mc.border;
+          const cardBg=mc.bg;
           const itemsHtml=(a.items||[]).map(item=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;color:var(--text-main);"><span style="flex:2;text-align:left;">• ${item.name}</span><span style="flex:1;text-align:center;color:var(--text-muted);">× ${item.qty}</span><span style="flex:1;text-align:right;color:var(--gold-light);">NT$${(item.price*item.qty).toLocaleString()}</span></div>`).join('');
-          const isShipped=a.shipped===true;
-          const today2=new Date(); today2.setHours(0,0,0,0);
-          let arrivalColor='rgba(200,185,220,0.4)';
-          if(isShipped) arrivalColor='var(--text-muted)';
-          else if(a.expectedArrivalDate){const arr=new Date(a.expectedArrivalDate+'T00:00:00');const diff=Math.ceil((arr-today2)/(1000*60*60*24));arrivalColor=diff<0?'#ff6b6b':diff<=10?'#e07830':'#7ec8e3';}
-          const cardBorderColor=isShipped?'#70b490':mc.border,cardBg=isShipped?'rgba(112,180,144,0.15)':mc.bg;
+          // 預購標籤：未出貨亮藍，已出貨暗灰無底色
+          const preorderTag = a.preorder
+            ? isShipped
+              ? `<span style="font-size:11px;color:var(--text-muted);padding:2px 6px;">預</span>`
+              : `<span style="background:rgba(126,200,227,0.25);color:#7ec8e3;padding:2px 8px;border-radius:4px;font-size:11px;">預</span>`
+            : '';
+          // ✅已出貨：只有預購才顯示，放右上角和「預」並排
+          const shippedTag = a.preorder
+            ? `<span onclick="toggleShipped('${r.id}');event.stopPropagation();" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;background:${isShipped?'rgba(112,180,144,0.2)':'rgba(200,185,220,0.06)'};border:1px solid ${isShipped?'rgba(112,180,144,0.3)':'rgba(200,185,220,0.15)'};transition:all 0.2s;">
+                <span style="font-size:12px;${isShipped?'':'filter:grayscale(1);opacity:0.4;'}">✅</span>
+                <span style="font-size:11px;color:${isShipped?'#70b490':'var(--text-muted)'};">已出貨</span>
+              </span>`
+            : '';
           return `${isFirst?`<div style="font-family:'Noto Serif TC',serif;font-size:13px;color:var(--gold);letter-spacing:0.1em;margin:16px 0 8px;padding-left:4px;">　${monthKey}</div>`:''}
           <div id="acc-card-${r.id}" style="border:1px solid var(--border-gold);border-left:4px solid ${cardBorderColor};border-radius:8px;padding:14px 16px;margin-bottom:10px;font-size:13px;background:linear-gradient(135deg,${cardBg} 0%,var(--bg-card) 40%);transition:box-shadow 0.3s;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-              <div style="color:${isShipped?'var(--text-muted)':'var(--text-main)'};font-weight:400;font-size:14px;">${product}</div>
+              <div style="color:var(--text-main);font-weight:400;font-size:14px;">${product}</div>
               <div style="display:flex;gap:6px;align-items:center;">
-                ${isShipped?'<span style="background:rgba(112,180,144,0.2);color:#70b490;padding:2px 8px;border-radius:4px;font-size:11px;">✅ 已出貨</span>':''}
-                ${a.isOfficial?'<span style="background:rgba(255,193,7,0.2);color:#FFD700;padding:2px 8px;border-radius:4px;font-size:11px;"> 官谷</span>':''}
-                ${a.preorder?'<span style="background:rgba(126,200,227,0.25);color:#7ec8e3;padding:2px 8px;border-radius:4px;font-size:11px;">預</span>':''}
+                ${a.isOfficial?'<span style="background:rgba(255,193,7,0.2);color:#FFD700;padding:2px 8px;border-radius:4px;font-size:11px;">官周</span>':''}
+                ${preorderTag}
+                ${shippedTag}
               </div>
             </div>
-            <div style="display:flex;gap:16px;margin-bottom:10px;">
+            <div style="display:flex;gap:16px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
               <div style="color:var(--text-muted);font-size:12px;">下單：<span style="color:#7ec8e3;">${dateStr}</span></div>
               <div style="color:var(--text-muted);font-size:12px;">預計出貨：<span style="color:${arrivalColor};">${arrivalStr}</span></div>
             </div>
@@ -1790,7 +1855,6 @@
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <button class="btn-ghost" onclick="toggleAccessoryAllDetail('${r.id}');event.stopPropagation();" style="font-size:12px;padding:6px 12px;">顯示更多</button>
               <div style="display:flex;gap:6px;">
-                <button class="btn-ghost" onclick="toggleShipped('${r.id}')" style="font-size:11px;padding:4px 8px;color:${isShipped?'#70b490':'var(--text-muted)'};">${isShipped?'📦 取消出貨':'📦 標記出貨'}</button>
                 <button class="btn-edit" onclick="openAccessoryEdit('${r.id}')" style="font-size:11px;padding:4px 8px;">編輯</button>
                 <button class="btn-danger" onclick="deleteRecord('${r.id}')" style="font-size:11px;padding:4px 8px;">刪除</button>
               </div>
@@ -1808,12 +1872,75 @@
             </div>
           </div>`;
         }).join('');
+      }
 
-        if(totalPages>1){
-          document.getElementById('accessoryPagination').innerHTML=Array.from({length:totalPages},(_,i)=>i+1).map(p=>
-            `<button class="btn-ghost" style="font-size:12px;padding:4px 10px;${p===currentPage?'background:rgba(196,160,100,0.2);color:var(--gold);':''}" onclick="goAccessoryPage(${p})">${p}</button>`
-          ).join('');
-        } else { document.getElementById('accessoryPagination').innerHTML=''; }
+      // ── 條列模式 ──
+      function renderListView(pageRecs) {
+        let html='<div style="border:1px solid var(--border-gold);border-radius:8px;overflow:hidden;">';
+        pageRecs.forEach((r,idx)=>{
+          const a=r.accessoryData||{};
+          const product=a.product||'周邊';
+          const isShipped=a.shipped===true;
+          const hasArrival=!!a.expectedArrivalDate;
+          const arrivalColor=_getArrivalColor(a,isShipped);
+          const arrivalStr=hasArrival?new Date(a.expectedArrivalDate+'T00:00:00').toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'}):'';
+          const dateStr=new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'});
+          const rowBg=idx%2===0?'transparent':'rgba(196,160,100,0.02)';
+          const itemsHtml=(a.items||[]).map(item=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;color:var(--text-main);"><span style="flex:2;text-align:left;">• ${item.name}</span><span style="flex:1;text-align:center;color:var(--text-muted);">× ${item.qty}</span><span style="flex:1;text-align:right;color:var(--gold-light);">NT$${(item.price*item.qty).toLocaleString()}</span></div>`).join('');
+          // 條列狀態：只有預購才顯示✅
+          const listPreorderTag = a.preorder
+            ? isShipped
+              ? `<span style="color:var(--text-muted);font-size:10px;">預</span>`
+              : `<span style="color:#7ec8e3;font-size:10px;">預</span>`
+            : '';
+          const listStatusHtml = a.preorder
+            ? `<span onclick="toggleShipped('${r.id}');event.stopPropagation();" style="cursor:pointer;font-size:14px;${isShipped?'':'filter:grayscale(1);opacity:0.35;'}" title="${isShipped?'取消出貨':'標記出貨'}">✅</span>
+               <span style="font-size:11px;color:${arrivalColor};">${hasArrival?arrivalStr:'—'}</span>`
+            : '';
+          html+=`<div id="acc-card-${r.id}">
+            <div class="acc-list-row" onclick="toggleAccessoryAllDetail('${r.id}')" style="background:${rowBg};">
+              <span class="acc-list-date">${dateStr}</span>
+              <span class="acc-list-preorder">${listPreorderTag}</span>
+              <span class="acc-list-name" style="color:var(--text-main);">${product}</span>
+              <span class="acc-list-amount">NT$${r.amount.toLocaleString()}</span>
+              <span class="acc-list-status">${listStatusHtml}</span>
+            </div>
+            <div id="all-detail-${r.id}" class="hidden acc-list-detail">
+              ${itemsHtml?`<div style="margin-bottom:6px;color:var(--text-muted);font-size:11px;letter-spacing:1px;">商品內容</div><div style="margin-bottom:12px;">${itemsHtml}</div>`:''}
+              <div style="border-top:1px solid rgba(196,160,100,0.1);padding-top:10px;margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;color:var(--text-main);"><span>· 包裝費/手續費</span><span style="color:var(--gold-light);">NT$${(a.packaging||0).toLocaleString()}</span></div>
+                <div style="display:flex;justify-content:space-between;color:var(--text-main);"><span>· 運費</span><span style="color:var(--gold-light);">NT$${(a.shipping||0).toLocaleString()}</span></div>
+              </div>
+              <div style="border-top:1px solid rgba(196,160,100,0.1);padding-top:10px;color:var(--text-muted);font-size:11px;line-height:1.8;text-align:left;margin-bottom:10px;">
+                ${a.shop?`<div>賣場：${a.shop}</div>`:''}
+                ${a.note?`<div style="font-style:italic;">備註：${a.note}</div>`:''}
+              </div>
+              <div style="display:flex;gap:6px;justify-content:flex-end;">
+                <button class="btn-edit" onclick="openAccessoryEdit('${r.id}')" style="font-size:11px;padding:4px 8px;">編輯</button>
+                <button class="btn-danger" onclick="deleteRecord('${r.id}')" style="font-size:11px;padding:4px 8px;">刪除</button>
+              </div>
+            </div>
+          </div>`;
+        });
+        html+='</div>';
+        return html;
+      }
+
+      // ── 檢視模式切換 ──
+      let accessoryViewMode = localStorage.getItem('ds_acc_view') || 'card';
+
+      function setAccessoryViewMode(mode) {
+        accessoryViewMode = mode;
+        localStorage.setItem('ds_acc_view', mode);
+        const cardBtn=document.getElementById('view-card-btn');
+        const listBtn=document.getElementById('view-list-btn');
+        if(cardBtn){ cardBtn.style.background=mode==='card'?'rgba(196,160,100,0.2)':'transparent'; cardBtn.style.color=mode==='card'?'var(--gold-light)':'var(--text-muted)'; }
+        if(listBtn){ listBtn.style.background=mode==='list'?'rgba(196,160,100,0.2)':'transparent'; listBtn.style.color=mode==='list'?'var(--gold-light)':'var(--text-muted)'; }
+        const filterEl=document.getElementById('accessory-month-filter');
+        const cf=filterEl?filterEl.value:'all';
+        const kw=document.getElementById('accessory-search')?.value.trim()||'';
+        if(kw) renderAccessoryAllView(null,kw);
+        else renderAccessoryAllView(cf==='all'?null:cf);
       }
 
       function goAccessoryPage(page){
@@ -1845,7 +1972,7 @@
           <div class="form-group" style="margin-bottom:14px;"><div class="form-label">運費</div><input type="text" inputmode="numeric" id="edit-acc-shipping" value="${a.shipping||0}" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()"></div>
           <div class="form-group" style="margin-bottom:14px;"><div class="form-label">備註</div><textarea id="edit-acc-note" style="min-height:60px;">${a.note||''}</textarea></div>
           <div style="display:inline-flex;gap:16px;align-items:center;margin-bottom:14px;">
-            <label class="check-item"><input type="checkbox" id="edit-acc-official" ${a.isOfficial?'checked':''}><div class="check-box"></div><span class="check-label">官谷</span></label>
+            <label class="check-item"><input type="checkbox" id="edit-acc-official" ${a.isOfficial?'checked':''}><div class="check-box"></div><span class="check-label">官周</span></label>
             <label class="check-item"><input type="checkbox" id="edit-acc-preorder" ${a.preorder?'checked':''}><div class="check-box"></div><span class="check-label">預購</span></label>
           </div>
           <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
@@ -1963,7 +2090,7 @@
           <div class="form-group" style="margin-bottom:14px;"><div class="form-label">運費</div><input type="text" inputmode="numeric" id="edit-acc-shipping" value="0" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="updateItemsTotal()"></div>
           <div class="form-group" style="margin-bottom:14px;"><div class="form-label">備註</div><textarea id="edit-acc-note" style="min-height:60px;"></textarea></div>
           <div style="display:inline-flex;gap:16px;align-items:center;margin-bottom:14px;">
-            <label class="check-item"><input type="checkbox" id="edit-acc-official"><div class="check-box"></div><span class="check-label">官谷</span></label>
+            <label class="check-item"><input type="checkbox" id="edit-acc-official"><div class="check-box"></div><span class="check-label">官周</span></label>
             <label class="check-item"><input type="checkbox" id="edit-acc-preorder"><div class="check-box"></div><span class="check-label">預購</span></label>
           </div>
           <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
